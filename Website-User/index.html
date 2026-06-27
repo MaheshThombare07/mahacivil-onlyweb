@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="MahaCivil — Civil charges calculator and Sanctioned DP maps for Chhatrapati Sambhajinagar">
+    <title>MahaCivil | Chhatrapati Sambhajinagar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=7">
+</head>
+<body>
+    <!-- Full-screen map modal -->
+    <div id="map-viewer" class="map-modal hidden" role="dialog" aria-modal="true">
+        <div class="map-modal-header">
+            <h2 id="map-title">Sector 01</h2>
+            <button type="button" id="map-close" class="map-close-btn" aria-label="Close map">&times;</button>
+        </div>
+        <div class="map-frame-wrap">
+            <iframe id="map-frame" title="Sector Map" allowfullscreen allow="geolocation; fullscreen"></iframe>
+        </div>
+    </div>
+
+    <!-- Site header -->
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="#home" class="site-logo">Maha<span>Civil</span></a>
+            <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+                <a href="#home" class="nav-link active" data-section="home" data-i18n="navHome">Home</a>
+                <a href="#calculator" class="nav-link" data-section="calculator" data-i18n="navCalculator">Calculator</a>
+                <a href="#asr-rates" class="nav-link" data-section="asr-rates" data-i18n="navAsr">eASR Rates</a>
+                <a href="#dp-maps" class="nav-link" data-section="dp-maps" data-i18n="navDp">DP Maps</a>
+                <a href="#services" class="nav-link" data-section="services" data-i18n="navServices">Our Services</a>
+                <a href="#about" class="nav-link" data-section="about" data-i18n="navAbout">About</a>
+                <a href="#contact" class="nav-link" data-section="contact" data-i18n="navContact">Contact</a>
+            </nav>
+            <div class="header-actions">
+                <div class="header-account hidden" id="header-account">
+                    <button
+                        type="button"
+                        class="account-btn"
+                        id="account-btn"
+                        aria-label="Account"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                    >
+                        <svg class="account-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </button>
+                    <div class="account-dropdown hidden" id="account-dropdown" role="menu">
+                        <p class="account-dropdown-label" data-i18n="authLoggedInAs">Logged in as</p>
+                        <p class="account-dropdown-mobile" id="account-mobile-display"></p>
+                        <button type="button" class="account-logout-btn" id="account-logout-btn" role="menuitem" data-i18n="authLogout">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+                <div class="header-lang">
+                    <button type="button" class="lang-pill active" data-lang="en">EN</button>
+                    <button type="button" class="lang-pill" data-lang="mr">मराठी</button>
+                </div>
+            </div>
+            <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle menu">☰</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero -->
+        <section id="home" class="hero section">
+            <div class="hero-bg-pattern" aria-hidden="true"></div>
+            <div class="container hero-grid">
+                <div class="hero-text">
+                    <p class="hero-tag" data-i18n="heroTag">Chhatrapati Sambhajinagar</p>
+                    <h1 data-i18n="heroTitle">Civil Charges &amp; Development Plan Portal</h1>
+                    <p class="hero-desc" data-i18n="heroDesc">
+                        Calculate Open Plot and Built-Up charges, browse sanctioned DP 2022-42 sector maps,
+                        and download professional PDF receipts — all in one place.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#calculator" class="btn btn-primary" data-i18n="heroCtaCalc">Open Calculator</a>
+                        <a href="#asr-rates" class="btn btn-ghost" data-i18n="navAsr">eASR Rates</a>
+                        <a href="#dp-maps" class="btn btn-outline" data-i18n="heroCtaDp">View DP Maps</a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <strong>2</strong>
+                            <span data-i18n="heroStatCalc">Calculators</span>
+                        </div>
+                        <div class="hero-stat">
+                            <strong>11</strong>
+                            <span data-i18n="heroStatDp">DP Sectors</span>
+                        </div>
+                        <div class="hero-stat">
+                            <strong>EN/MR</strong>
+                            <span data-i18n="heroStatLang">Bilingual</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-cards">
+                    <div class="feature-card">
+                        <span class="feature-icon" aria-hidden="true">📐</span>
+                        <div>
+                            <h3 data-i18n="openPlotShort">Open Plot</h3>
+                            <p data-i18n="heroCardOpen">Scrutiny, land development &amp; betterment charges</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon" aria-hidden="true">🏗️</span>
+                        <div>
+                            <h3 data-i18n="builtUpShort">Built Up</h3>
+                            <p data-i18n="heroCardBuilt">Residential, commercial &amp; margin penalties</p>
+                        </div>
+                    </div>
+                    <div class="feature-card accent">
+                        <span class="feature-icon" aria-hidden="true">🗺️</span>
+                        <div>
+                            <h3>DP 2022-42</h3>
+                            <p data-i18n="heroCardDp">11 interactive sector maps</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calculator -->
+        <section id="calculator" class="section section-alt">
+            <div class="container">
+                <div class="section-head section-head-center">
+                    <p class="section-tag" data-i18n="calcSectionTag">Civil Tools</p>
+                    <h2 data-i18n="navCalculator">Calculator</h2>
+                    <p data-i18n="calcSectionDesc">Enter plot details below to compute charges instantly.</p>
+                </div>
+
+                <div class="calc-tabs">
+                    <button type="button" class="calc-tab active" data-calc="open-plot" data-i18n="openPlotShort">Open Plot</button>
+                    <button type="button" class="calc-tab" data-calc="built-up" data-i18n="builtUpShort">Built Up</button>
+                </div>
+
+                <div class="calc-layout">
+                    <div class="calc-form card">
+                        <div class="converter-box">
+                            <h3 data-i18n="convertSqFt">Convert Sq.ft to Sq.m:</h3>
+                            <div class="form-row">
+                                <input type="text" class="form-input" id="plot-sqft" inputmode="decimal" placeholder="e.g. 600" autocomplete="off">
+                                <div class="stepper-group">
+                                    <button type="button" class="step-btn step-up" data-target="plot-sqft" data-step="10">+</button>
+                                    <button type="button" class="step-btn step-down" data-target="plot-sqft" data-step="10">−</button>
+                                </div>
+                            </div>
+                            <p class="converter-result"><span data-i18n="result">Result:</span> <strong id="sqft-result">--</strong></p>
+                            <p class="field-error hidden" id="err-plot-sqft"></p>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="plot-sqm" data-i18n="plotAreaSqM">Plot Area (Sq.m)</label>
+                                <div class="form-row">
+                                    <input type="text" class="form-input" id="plot-sqm" inputmode="decimal" placeholder="Enter area" autocomplete="off">
+                                    <div class="stepper-group">
+                                        <button type="button" class="step-btn step-up" data-target="plot-sqm" data-step="0.01">+</button>
+                                        <button type="button" class="step-btn step-down" data-target="plot-sqm" data-step="0.01">−</button>
+                                    </div>
+                                </div>
+                                <p class="field-error hidden" id="err-plot-sqm"></p>
+                            </div>
+                            <div class="form-group">
+                                <label for="asr-rate" data-i18n="asrRate">eASR Rate</label>
+                                <div class="form-row">
+                                    <input type="text" class="form-input" id="asr-rate" inputmode="decimal" placeholder="Enter rate" autocomplete="off">
+                                    <div class="stepper-group">
+                                        <button type="button" class="step-btn step-up" data-target="asr-rate" data-step="100">+</button>
+                                        <button type="button" class="step-btn step-down" data-target="asr-rate" data-step="100">−</button>
+                                    </div>
+                                </div>
+                                <p class="field-error hidden" id="err-asr-rate"></p>
+                            </div>
+                        </div>
+
+                        <div id="built-up-fields" class="built-up-fields hidden">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="bu-res" data-i18n="builtUpRes">Built-up Area Residential</label>
+                                    <input type="text" class="form-input" id="bu-res" inputmode="decimal" placeholder="0" autocomplete="off">
+                                    <p class="field-error hidden" id="err-bu-res"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="bu-comm" data-i18n="builtUpComm">Built-up Area Commercial</label>
+                                    <input type="text" class="form-input" id="bu-comm" inputmode="decimal" placeholder="0" autocomplete="off">
+                                    <p class="field-error hidden" id="err-bu-comm"></p>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="bu-margins" data-i18n="builtUpMargins">Built-up in Margins</label>
+                                    <input type="text" class="form-input" id="bu-margins" inputmode="decimal" placeholder="0" autocomplete="off">
+                                    <p class="field-error hidden" id="err-bu-margins"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" id="btn-calculate" class="btn btn-primary" data-i18n="calculate">Calculate</button>
+                            <button type="button" id="btn-pdf" class="btn btn-secondary" data-i18n="generatePdf" disabled>Generate PDF</button>
+                        </div>
+                    </div>
+
+                    <div class="calc-result card" id="receipt-section">
+                        <div class="result-placeholder" id="result-placeholder">
+                            <p data-i18n="resultPlaceholder">Fill in the fields and click Calculate to see your receipt here.</p>
+                        </div>
+                        <div id="receipt" class="receipt hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- eASR Rates -->
+        <section id="asr-rates" class="section section-alt">
+            <div class="container">
+                <div class="section-head section-head-center">
+                    <p class="section-tag" data-i18n="asrTag">IGR Maharashtra eASR</p>
+                    <h2 data-i18n="navAsr">eASR Rates</h2>
+                    <p data-i18n="asrDesc">Look up live eASR rates by taluka and village from the government eASR portal.</p>
+                </div>
+
+                <div class="asr-layout">
+                    <div class="card asr-form-card">
+                        <div class="form-grid asr-form-grid">
+                            <div class="form-group">
+                                <label for="asr-district" data-i18n="asrDistrict">District</label>
+                                <input type="text" id="asr-district" class="form-input asr-fixed-field" value="Chhatrapati Sambhajinagar" readonly aria-readonly="true">
+                            </div>
+                            <div class="form-group">
+                                <label for="asr-taluka" data-i18n="asrTaluka">Taluka</label>
+                                <select id="asr-taluka" class="form-select"></select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="asr-village" data-i18n="asrVillage">Village</label>
+                                <select id="asr-village" class="form-select" disabled>
+                                    <option value="" data-i18n="asrSelectVillage">Select taluka first</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions asr-form-actions">
+                            <button type="button" id="asr-fetch-btn" class="btn btn-primary" data-i18n="asrFetch">Fetch Rates</button>
+                            <button type="button" id="asr-pdf-btn" class="btn btn-secondary" data-i18n="generatePdf" disabled>Generate PDF</button>
+                        </div>
+                        <p id="asr-status" class="asr-status muted" aria-live="polite"></p>
+                    </div>
+
+                    <div class="asr-results-panel" id="asr-results-section">
+                        <div class="asr-placeholder" id="asr-placeholder">
+                            <p data-i18n="asrPlaceholder">Select taluka and village, then click Fetch Rates to load live data.</p>
+                        </div>
+                        <div id="asr-results" class="asr-results hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DP Maps -->
+        <section id="dp-maps" class="section">
+            <div class="container">
+                <div class="section-head section-head-center">
+                    <p class="section-tag">Chhatrapati Sambhajinagar</p>
+                    <h2>Sanctioned DP 2022-42</h2>
+                    <p data-i18n="sanctionedMod">Sanctioned Modifications (SM) — Select a sector to view the interactive map</p>
+                </div>
+                <div id="sector-list" class="sector-grid"></div>
+            </div>
+        </section>
+
+        <!-- Our Services -->
+        <section id="services" class="section">
+            <div class="container">
+                <div class="section-head section-head-center">
+                    <p class="section-tag" data-i18n="servicesSectionTag">Consultancy</p>
+                    <h2 data-i18n="navServices">Our Services</h2>
+                    <p data-i18n="servicesSectionDesc">Complete solutions for construction permissions, architectural planning, land documentation, and government approvals.</p>
+                </div>
+
+                <div class="svc-grid">
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">🏗️</span>
+                        <h3 data-i18n="svc1Title">Construction Permission &amp; Completion</h3>
+                        <p data-i18n="svc1Desc">Complete assistance for obtaining construction permissions, approvals, and completion certificates as per government regulations.</p>
+                    </div>
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">📐</span>
+                        <h3 data-i18n="svc2Title">Construction Plans &amp; Layout Designing</h3>
+                        <p data-i18n="svc2Desc">Professional preparation of building plans, layouts, and technical drawings for residential, commercial, and industrial projects.</p>
+                    </div>
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">🏡</span>
+                        <h3 data-i18n="svc3Title">Gunthewari (गुंठेवारी) Services</h3>
+                        <p data-i18n="svc3Desc">Expert guidance and documentation support for Gunthewari regularization and approval procedures.</p>
+                    </div>
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">🔄</span>
+                        <h3 data-i18n="svc4Title">TDR (Transfer of Development Rights)</h3>
+                        <p data-i18n="svc4Desc">Professional assistance in TDR-related documentation, approvals, and technical processes.</p>
+                    </div>
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">📋</span>
+                        <h3 data-i18n="svc5Title">NA 44 Layout Approval</h3>
+                        <p data-i18n="svc5Desc">Complete support for Non-Agricultural (NA) Layout planning, documentation, and approval procedures.</p>
+                    </div>
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">🏢</span>
+                        <h3 data-i18n="svc6Title">Steel Design &amp; Structural Solutions</h3>
+                        <p data-i18n="svc6Desc">Accurate steel design and structural planning ensuring safety, stability, and compliance with engineering standards.</p>
+                    </div>
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">🎨</span>
+                        <h3 data-i18n="svc7Title">3D Designing &amp; Visualization</h3>
+                        <p data-i18n="svc7Desc">Modern 3D building designs and realistic visualizations to help clients understand projects before execution.</p>
+                    </div>
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">🏛️</span>
+                        <h3 data-i18n="svc8Title">Government NOC Services</h3>
+                        <p data-i18n="svc8Desc">Assistance in obtaining various government No Objection Certificates (NOCs) and required approvals.</p>
+                    </div>
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">📄</span>
+                        <h3 data-i18n="svc9Title">7/12 Extract &amp; PR Card Services</h3>
+                        <p data-i18n="svc9Desc">Complete support for 7/12 (सातबारा), PR Cards, land records, and related property documentation.</p>
+                    </div>
+                    <div class="card svc-card">
+                        <span class="svc-icon" aria-hidden="true">🗂️</span>
+                        <h3 data-i18n="svc10Title">Land Documentation &amp; Legal Support</h3>
+                        <p data-i18n="svc10Desc">Guidance for property documents, layouts, approvals, and other essential paperwork.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About -->
+        <section id="about" class="section section-alt">
+            <div class="container">
+                <div class="section-head section-head-center">
+                    <p class="section-tag" data-i18n="aboutSectionTag">About Us</p>
+                    <h2 data-i18n="aboutCompanyName">Vaibhav Budhwant and Associates</h2>
+                    <p data-i18n="aboutTagline">Your Trusted Partner for Construction Approvals &amp; Land Documentation</p>
+                </div>
+
+                <div class="ab-wrap">
+                    <div class="card ab-intro">
+                        <p class="ab-lead" data-i18n="aboutPara1">Vaibhav Budhwant and Associates is a reliable and experienced consultancy firm offering complete solutions for construction permissions, architectural planning, land documentation, and government approvals. With a commitment to professionalism, accuracy, and timely execution, we help homeowners, builders, and landowners complete their legal and technical processes smoothly and without complications.</p>
+                        <p class="ab-lead" data-i18n="aboutPara2">From obtaining construction permissions to preparing detailed building plans, handling Gunthewari regularization, TDR services, NA 44 layouts, and various government NOCs, our expert team provides end-to-end guidance at every step.</p>
+                        <p class="ab-goal" data-i18n="aboutGoal">Our goal is to simplify complex procedures and provide transparent, efficient, and trustworthy services to our clients.</p>
+                    </div>
+
+                    <div class="card ab-why">
+                        <h3 class="ab-heading" data-i18n="whyChooseUs">Why Choose Us?</h3>
+                        <div class="why-grid">
+                            <div class="why-item"><span class="why-check">✔</span><span data-i18n="why1">One-stop solution for all construction and land-related requirements</span></div>
+                            <div class="why-item"><span class="why-check">✔</span><span data-i18n="why2">Experienced professional guidance</span></div>
+                            <div class="why-item"><span class="why-check">✔</span><span data-i18n="why3">Accurate documentation and technical support</span></div>
+                            <div class="why-item"><span class="why-check">✔</span><span data-i18n="why4">Fast and hassle-free processing</span></div>
+                            <div class="why-item"><span class="why-check">✔</span><span data-i18n="why5">Transparent and reliable services</span></div>
+                            <div class="why-item"><span class="why-check">✔</span><span data-i18n="why6">Dedicated assistance from start to completion</span></div>
+                        </div>
+                    </div>
+
+                    <div class="card ab-digital">
+                        <h3 class="ab-heading" data-i18n="digitalToolsTitle">MahaCivil Digital Tools</h3>
+                        <p class="ab-sub" data-i18n="digitalToolsDesc">Along with consultancy services, we provide this website and the Maha Civil Android app — civil charge calculators, live eASR rates, sanctioned DP maps, and PDF receipts for Chhatrapati Sambhajinagar.</p>
+                        <div class="ab-grid">
+                            <div class="ab-item"><span class="ab-dot"></span><span data-i18n="aboutFeature3">Open Plot &amp; Built-Up calculators</span></div>
+                            <div class="ab-item"><span class="ab-dot"></span><span data-i18n="aboutFeature4">Live eASR rates &amp; DP 2022-42 sector maps</span></div>
+                            <div class="ab-item ab-item-full"><span class="ab-dot"></span><span data-i18n="aboutFeature5">PDF receipts — English &amp; Marathi support</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact -->
+        <section id="contact" class="section">
+            <div class="container">
+                <div class="section-head section-head-center">
+                    <p class="section-tag" data-i18n="navContact">Contact</p>
+                    <h2 data-i18n="contactUs">Contact Us</h2>
+                    <p class="contact-firm-name" data-i18n="aboutCompanyName">Vaibhav Budhwant and Associates</p>
+                    <p data-i18n="contactUsDesc">Reach out for construction permissions, land documentation, government approvals, or MahaCivil digital tools.</p>
+                </div>
+
+                <div class="ct-wrap">
+                    <div class="ct-card ct-card-static">
+                        <div class="ct-icon ct-icon-address">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/></svg>
+                        </div>
+                        <p class="ct-label" data-i18n="contactAddress">Address</p>
+                        <p class="ct-value ct-value-multiline" data-i18n="contactAddressValue">Ground Floor, Chandrapushpa Sankul, Opp. 3M Car Care, Near HDFC Bank, Kalda Corner, Chhatrapati Sambhajinagar – 431001</p>
+                    </div>
+                    <a href="mailto:maha.civil2018@gmail.com" class="ct-card">
+                        <div class="ct-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="currentColor" stroke-width="2"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2"/></svg>
+                        </div>
+                        <p class="ct-label" data-i18n="contactEmail">Email</p>
+                        <p class="ct-value">maha.civil2018@gmail.com</p>
+                    </a>
+                    <a href="tel:9579022322" class="ct-card">
+                        <div class="ct-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="2"/></svg>
+                        </div>
+                        <p class="ct-label" data-i18n="contactPhone">Phone</p>
+                        <p class="ct-value">+91 95790 22322</p>
+                    </a>
+                    <a href="tel:9552333693" class="ct-card">
+                        <div class="ct-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="2"/></svg>
+                        </div>
+                        <p class="ct-label" data-i18n="contactPhone">Phone</p>
+                        <p class="ct-value">+91 95523 33693</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="ft-grid">
+                <div class="ft-brand">
+                    <strong class="ft-logo">Maha<span>Civil</span></strong>
+                    <p data-i18n="footerTagline">Civil charges &amp; DP maps for Chhatrapati Sambhajinagar</p>
+                </div>
+                <div>
+                    <p class="ft-col-title" data-i18n="footerQuickLinks">Quick Links</p>
+                    <nav class="ft-nav" aria-label="Footer navigation">
+                        <a href="#calculator" data-i18n="navCalculator">Calculator</a>
+                        <a href="#asr-rates" data-i18n="navAsr">eASR Rates</a>
+                        <a href="#dp-maps" data-i18n="navDp">DP Maps</a>
+                        <a href="#services" data-i18n="navServices">Our Services</a>
+                        <a href="#about" data-i18n="navAbout">About</a>
+                        <a href="#contact" data-i18n="navContact">Contact</a>
+                    </nav>
+                </div>
+                <div>
+                    <p class="ft-col-title" data-i18n="footerReachUs">Reach Us</p>
+                    <div class="ft-contact">
+                        <a href="mailto:maha.civil2018@gmail.com">maha.civil2018@gmail.com</a>
+                        <a href="tel:9579022322">+91 95790 22322</a>
+                        <a href="tel:9552333693">+91 95523 33693</a>
+                    </div>
+                </div>
+            </div>
+            <div class="ft-bottom">
+                <p>&copy; <span id="year"></span> MahaCivil. <span data-i18n="footerRights">All rights reserved.</span></p>
+                <button type="button" id="developed-by-btn" class="developed-by-btn" data-i18n="developedBy">Developed by</button>
+            </div>
+        </div>
+    </footer>
+
+    <div id="print-area" class="print-only"></div>
+
+    <!-- Login modal (shown when user clicks Calculate without being logged in) -->
+    <div id="auth-modal" class="auth-modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+        <div id="auth-modal-backdrop" class="auth-modal-backdrop" aria-hidden="true"></div>
+        <div class="auth-modal-card">
+            <div class="auth-modal-header">
+                <button type="button" id="auth-modal-close" class="auth-modal-close" aria-label="Close">&times;</button>
+                <div class="auth-modal-logo">M</div>
+                <h2 id="auth-modal-title">Login to Calculate</h2>
+                <p id="auth-modal-subtitle">Sign in to view your calculation results</p>
+            </div>
+            <div class="auth-modal-body">
+                <div class="form-group hidden" id="auth-name-group">
+                    <label for="auth-name" data-i18n="authName">Full Name</label>
+                    <input type="text" id="auth-name" class="form-input" placeholder="Enter your name" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="auth-mobile" data-i18n="authMobile">Mobile Number</label>
+                    <input type="tel" id="auth-mobile" class="form-input" placeholder="10-digit mobile number" inputmode="numeric" autocomplete="tel">
+                </div>
+                <div class="form-group">
+                    <label for="auth-password" data-i18n="authPassword">Password</label>
+                    <input type="password" id="auth-password" class="form-input" placeholder="Enter password" autocomplete="current-password">
+                </div>
+                <p id="auth-error" class="auth-error hidden" role="alert"></p>
+            </div>
+            <div class="auth-modal-footer">
+                <button type="button" id="auth-submit-btn" class="btn btn-primary" style="width:100%">Login</button>
+                <button type="button" id="auth-toggle-btn" class="auth-toggle-btn" data-i18n="authCreateAccount">Create new account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Developer popup -->
+    <div id="dev-modal" class="dev-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dev-modal-title">
+        <div id="dev-modal-backdrop" class="dev-modal-backdrop" aria-hidden="true"></div>
+        <div class="dev-modal-card">
+            <div class="dev-modal-header">
+                <button type="button" id="dev-modal-close" class="dev-modal-close" aria-label="Close">&times;</button>
+                <h2 id="dev-modal-title" data-i18n="aboutDeveloper">About Developer</h2>
+            </div>
+            <div class="dev-modal-body">
+                <div class="dev-profile">
+                    <div class="dev-avatar">KB</div>
+                    <div>
+                        <p class="dev-name">Karan Bankar</p>
+                        <p class="dev-role" data-i18n="devRole">App &amp; Web Developer</p>
+                    </div>
+                </div>
+                <p class="dev-bio" data-i18n="devBio">Designed and developed the MahaCivil Android app and website to help civil engineers and citizens of Chhatrapati Sambhajinagar calculate charges and access DP sector maps.</p>
+                <div class="dev-contacts">
+                    <a href="mailto:karanbankar54@gmail.com" class="dev-contact-row">
+                        <span class="dev-contact-label" data-i18n="contactEmail">Email</span>
+                        <span class="dev-contact-value">karanbankar54@gmail.com</span>
+                    </a>
+                    <a href="tel:9307879687" class="dev-contact-row">
+                        <span class="dev-contact-label" data-i18n="contactPhone">Phone</span>
+                        <span class="dev-contact-value">+91 93078 79687</span>
+                    </a>
+                </div>
+                <div class="dev-services">
+                    <p class="dev-services-title" data-i18n="devServices">Services</p>
+                    <ul class="dev-services-list">
+                        <li data-i18n="devService1">App Development</li>
+                        <li data-i18n="devService2">Website Development</li>
+                        <li data-i18n="devService3">Software Development</li>
+                        <li data-i18n="devService4">Software Deployment</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="dev-modal-footer">
+                <button type="button" id="dev-modal-ok" class="btn btn-primary" style="width:100%" data-i18n="devDialogOk">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
+    <script src="js/i18n.js?v=5"></script>
+    <script src="js/calculator.js?v=4"></script>
+    <script src="js/pdf.js?v=4"></script>
+    <script src="js/asr.js?v=10"></script>
+    <script src="js/auth.js?v=5"></script>
+    <script src="js/app.js?v=4"></script>
+</body>
+</html>
