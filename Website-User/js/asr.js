@@ -33,21 +33,44 @@
         return String(Number(n));
     }
 
+    // Detect whether entries use the new multi-column format (has subzone field)
+    // or the old grouped format (has assessmentType + rates[])
+    function isNewFormat(data) {
+        const first = (data.entries || [])[0];
+        return first && ("subzone" in first || "openLand" in first);
+    }
+
+    // Flatten old-format entries into display rows (backward compat)
     function flattenEntries(data) {
+        if (isNewFormat(data)) return data.entries || [];
         const rows = [];
         (data.entries || []).forEach((entry) => {
             (entry.rates || []).forEach((rate) => {
                 if (Number(rate.rate) === 0) return;
                 rows.push({
                     vibhagNo: entry.vibhagNo,
-                    assessmentType: entry.assessmentType,
-                    assessmentRange: rate.assessmentRange || "",
-                    rate: rate.rate,
-                    unit: rate.unit || ""
+                    subzone: rate.assessmentRange
+                        ? `${entry.assessmentType} — ${rate.assessmentRange}`
+                        : entry.assessmentType,
+                    openLand: rate.rate,
+                    unit: rate.unit || "",
                 });
             });
         });
         return rows;
+    }
+
+    // Which rate columns have at least one non-zero value?
+    function detectColumns(rows) {
+        return {
+            openLand:    rows.some((r) => r.openLand    > 0),
+            residential: rows.some((r) => r.residential > 0),
+            office:      rows.some((r) => r.office      > 0),
+            shop:        rows.some((r) => r.shop        > 0),
+            industrial:  rows.some((r) => r.industrial  > 0),
+            unit:        rows.some((r) => r.unit && r.unit.trim()),
+            hasSurvey:   rows.some((r) => r.hasSurvey),
+        };
     }
 
     function hasUnitColumn(rows) {
@@ -167,7 +190,7 @@
         }
     }
 
-    function fillSelect(select, items, placeholderText, previousValue) {
+    function fillSelect(select, items, placeholderText, previousValue, autoSelectFirst) {
         select.innerHTML = "";
         const placeholder = document.createElement("option");
         placeholder.value = "";
@@ -184,6 +207,8 @@
         select.disabled = false;
         if (previousValue && items.includes(previousValue)) {
             select.value = previousValue;
+        } else if (autoSelectFirst && items.length > 0) {
+            select.value = items[0];
         }
     }
 
@@ -196,18 +221,20 @@
         setSelectLoading(select, t("asrLoadingTalukas", lang), true);
 
         try {
-            await loadStaticTalukas(select, lang, previous);
-            if (select.value) {
-                await loadVillages(select.value);
-            } else {
-                setSelectLoading($("#asr-village"), t("asrSelectVillage", lang), true);
-            }
+            const data = await loadStaticLocations();
+            const names = (data.talukas || [])
+                .map((item) => (typeof item === "string" ? item : item.name))
+                .filter(Boolean);
+            if (!names.length) throw new Error("no talukas");
+            fillSelect(select, names, t("asrSelectTaluka", lang), previous, true);
+            setStatus("", false);
+            if (select.value) await loadVillages(select.value);
             return;
-        } catch (_) { /* no bundled talukas */ }
+        } catch (_) { /* fall through */ }
 
         try {
             const data = await apiGet("/get-talukas");
-            fillSelect(select, data.talukas || [], t("asrSelectTaluka", lang), previous);
+            fillSelect(select, data.talukas || [], t("asrSelectTaluka", lang), previous, true);
             if (select.value) {
                 await loadVillages(select.value);
             } else {
@@ -303,7 +330,7 @@
 
         const rows = flattenEntries(data);
         const vibhagNo = rows.length ? rows[0].vibhagNo : (data.entries && data.entries[0] && data.entries[0].vibhagNo);
-        const showUnit = hasUnitColumn(rows);
+        const cols = detectColumns(rows);
 
         let html = `
             <div class="asr-portal-panel">
@@ -333,7 +360,7 @@
             `;
         }
 
-        // Survey number bar
+        // Survey number section selector (when portal uses separate survey dropdowns)
         if (data.hasSurveyNumbers && data.surveyNumbers && data.surveyNumbers.length) {
             const selected = data.selectedSurvey || data.surveyNumbers[0];
             html += `<div class="asr-survey-bar">`;
@@ -348,29 +375,45 @@
         if (!rows.length) {
             html += `<p class="muted asr-no-data">${t("asrNoData", lang)}</p>`;
         } else {
-            html += `
-                <div class="asr-table-wrap">
-                    <table class="asr-table asr-table-gov">
-                        <thead>
-                            <tr>
-                                <th>${t("asrAssessmentType", lang)}</th>
-                                <th>${t("asrRange", lang)}</th>
-                                <th>${t("asrRateCol", lang)}</th>
-                                ${showUnit ? `<th>${t("asrUnit", lang)}</th>` : ""}
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            rows.forEach((row) => {
-                html += `
-                    <tr>
-                        <td class="asr-type-cell">${row.assessmentType}</td>
-                        <td class="asr-range-cell">${row.assessmentRange || "—"}</td>
-                        <td class="asr-rate-cell">${formatRate(row.rate)}</td>
-                        ${showUnit ? `<td>${row.unit || "—"}</td>` : ""}
-                    </tr>
-                `;
+            html += `<div class="asr-table-wrap"><table class="asr-table asr-table-gov"><thead><tr>`;
+            html += `<th class="asr-th-subzone">${t("asrSubzone", lang)}</th>`;
+            if (cols.openLand)    html += `<th>${t("asrOpenLand", lang)}</th>`;
+            if (cols.residential) html += `<th>${t("asrResidential", lang)}</th>`;
+            if (cols.office)      html += `<th>${t("asrOffice", lang)}</th>`;
+            if (cols.shop)        html += `<th>${t("asrShop", lang)}</th>`;
+            if (cols.industrial)  html += `<th>${t("asrIndustrial", lang)}</th>`;
+            if (cols.unit)        html += `<th>${t("asrUnit", lang)}</th>`;
+            if (cols.hasSurvey)   html += `<th></th>`;
+            html += `</tr></thead><tbody>`;
+
+            rows.forEach((row, idx) => {
+                html += `<tr>`;
+                const subzoneLabel = row.zoneNo
+                    ? `<span class="asr-zone-no">${row.zoneNo}</span> ${row.subzone || "—"}`
+                    : (row.subzone || "—");
+                html += `<td class="asr-subzone-cell">${subzoneLabel}</td>`;
+                if (cols.openLand)    html += `<td class="asr-rate-cell">${row.openLand    > 0 ? formatRate(row.openLand)    : "—"}</td>`;
+                if (cols.residential) html += `<td class="asr-rate-cell">${row.residential > 0 ? formatRate(row.residential) : "—"}</td>`;
+                if (cols.office)      html += `<td class="asr-rate-cell">${row.office      > 0 ? formatRate(row.office)      : "—"}</td>`;
+                if (cols.shop)        html += `<td class="asr-rate-cell">${row.shop        > 0 ? formatRate(row.shop)        : "—"}</td>`;
+                if (cols.industrial)  html += `<td class="asr-rate-cell">${row.industrial  > 0 ? formatRate(row.industrial)  : "—"}</td>`;
+                if (cols.unit)        html += `<td class="asr-unit-cell">${row.unit || "—"}</td>`;
+                if (cols.hasSurvey)   html += `<td class="asr-survey-cell">${row.hasSurvey ? `<button type="button" class="asr-survey-row-btn" data-row="${idx}" title="${t("asrSurveyNumbers", lang)}">📋 ${t("asrSurveysBtn", lang)}</button>` : ""}</td>`;
+                html += `</tr>`;
+                // Survey number expand area (initially hidden)
+                if (row.hasSurvey) {
+                    const colspan = 1 + (cols.openLand?1:0) + (cols.residential?1:0) + (cols.office?1:0) +
+                                    (cols.shop?1:0) + (cols.industrial?1:0) + (cols.unit?1:0) + 1;
+                    html += `<tr class="asr-survey-expand-row hidden" data-expand-row="${idx}">
+                        <td colspan="${colspan}" class="asr-survey-expand-cell">
+                            <div class="asr-survey-expand-content" id="asr-survey-expand-${idx}">
+                                <span class="asr-survey-loading">${t("asrLoadingSurveys", lang)}</span>
+                            </div>
+                        </td>
+                    </tr>`;
+                }
             });
+
             html += `</tbody></table></div>`;
             html += `<p class="asr-footnote">${t("asrAllPagesNote", lang)} · ${rows.length} ${t("asrRowCount", lang)}</p>`;
         }
@@ -459,17 +502,52 @@
             clearResults();
         });
 
-        // Survey chip click delegation on the results container
+        // Click delegation on the results container
         const resultsContainer = $("#asr-results");
         if (resultsContainer) {
-            resultsContainer.addEventListener("click", (e) => {
+            resultsContainer.addEventListener("click", async (e) => {
+                // Survey section chip (portal-level survey dropdown switch)
                 const chip = e.target.closest(".asr-survey-chip");
-                if (!chip || !lastAsrResult) return;
-                const surveyNo = chip.dataset.survey;
-                if (lastAsrResult.hasSurveyNumbers && lastAsrResult.surveyData && lastAsrResult.surveyData[surveyNo]) {
-                    lastAsrResult.entries = lastAsrResult.surveyData[surveyNo];
-                    lastAsrResult.selectedSurvey = surveyNo;
-                    renderResults(lastAsrResult, getLang());
+                if (chip && lastAsrResult) {
+                    const surveyNo = chip.dataset.survey;
+                    if (lastAsrResult.hasSurveyNumbers && lastAsrResult.surveyData && lastAsrResult.surveyData[surveyNo]) {
+                        lastAsrResult.entries = lastAsrResult.surveyData[surveyNo];
+                        lastAsrResult.selectedSurvey = surveyNo;
+                        renderResults(lastAsrResult, getLang());
+                    }
+                    return;
+                }
+
+                // Per-row SurveyNo button (fetch survey parcel numbers)
+                const surveyBtn = e.target.closest(".asr-survey-row-btn");
+                if (surveyBtn && lastAsrResult) {
+                    const rowIdx = parseInt(surveyBtn.dataset.row, 10);
+                    const expandRow = resultsContainer.querySelector(`[data-expand-row="${rowIdx}"]`);
+                    const expandContent = resultsContainer.querySelector(`#asr-survey-expand-${rowIdx}`);
+                    if (!expandRow || !expandContent) return;
+
+                    // Toggle if already loaded
+                    if (expandRow.classList.contains("asr-survey-loaded")) {
+                        expandRow.classList.toggle("hidden");
+                        return;
+                    }
+
+                    expandRow.classList.remove("hidden");
+                    const lang = getLang();
+                    try {
+                        const surveyParam = lastAsrResult.selectedSurvey
+                            ? `&survey=${encodeURIComponent(lastAsrResult.selectedSurvey)}`
+                            : "";
+                        const data = await apiGet(
+                            `/get-surveys?taluka=${encodeURIComponent(lastAsrResult.taluka)}&village=${encodeURIComponent(lastAsrResult.village)}&row=${rowIdx}${surveyParam}`,
+                            90000
+                        );
+                        const text = data.surveys || t("asrNoSurveys", lang);
+                        expandContent.innerHTML = `<span class="asr-survey-numbers">${text}</span>`;
+                        expandRow.classList.add("asr-survey-loaded");
+                    } catch (err) {
+                        expandContent.innerHTML = `<span class="asr-error-text">${err.message || t("asrError", lang)}</span>`;
+                    }
                 }
             });
         }
@@ -493,4 +571,269 @@
         updateDistrictField();
         loadTalukas();
     };
+
+    // ─── Calculator-embedded eASR lookup ────────────────────────────────────────
+    // Compact inline rate lookup inside the calculator form.
+    // Uses calc-asr-* element IDs to avoid conflicts with the standalone section.
+
+    let calcAsrResult = null;
+
+    function calcSetStatus(msg, isError) {
+        const el = document.querySelector("#calc-asr-status");
+        if (!el) return;
+        el.textContent = msg || "";
+        el.classList.toggle("asr-error", !!isError);
+    }
+
+    function calcFillRate(rateValue, label) {
+        const input = document.querySelector("#asr-rate");
+        if (!input) return;
+        input.value = rateValue;
+        input.dispatchEvent(new Event("input"));
+        const badge = document.querySelector("#calc-selected-rate-badge");
+        if (badge) {
+            badge.textContent = label ? `${t("calcAsrSelected", getLang())} ${label} (₹${Number(rateValue).toLocaleString("en-IN")})` : "";
+        }
+        // Scroll to calculation inputs
+        input.scrollIntoView({ behavior: "smooth", block: "center" });
+        input.classList.add("calc-rate-filled");
+        setTimeout(() => input.classList.remove("calc-rate-filled"), 1500);
+    }
+
+    function renderCalcResults(data, lang) {
+        const container = document.querySelector("#calc-asr-results");
+        if (!container) return;
+        calcAsrResult = data;
+
+        const rows = flattenEntries(data);
+        if (!rows.length) {
+            container.innerHTML = `<div class="calc-asr-inner"><p class="muted" style="padding:12px 14px">${t("asrNoData", lang)}</p></div>`;
+            container.classList.remove("hidden");
+            return;
+        }
+
+        const cols = detectColumns(rows);
+
+        const rateTypes = [];
+        if (cols.openLand)    rateTypes.push({ field: "openLand",    label: t("asrOpenLand", lang) });
+        if (cols.residential) rateTypes.push({ field: "residential", label: t("asrResidential", lang) });
+        if (cols.office)      rateTypes.push({ field: "office",      label: t("asrOffice", lang) });
+        if (cols.shop)        rateTypes.push({ field: "shop",        label: t("asrShop", lang) });
+        if (cols.industrial)  rateTypes.push({ field: "industrial",  label: t("asrIndustrial", lang) });
+
+        // Total columns for survey expand row colspan
+        const totalCols = 1 + rateTypes.length + (cols.unit ? 1 : 0) + (cols.hasSurvey ? 1 : 0);
+
+        let html = `<div class="calc-asr-inner">`;
+
+        // Location type chips (e.g. जिरायत जमिनी, बिनशेती झालेल्या जमिनी)
+        if (data.hasSurveyNumbers && data.surveyNumbers && data.surveyNumbers.length) {
+            const selected = data.selectedSurvey || data.surveyNumbers[0];
+            html += `<div class="calc-asr-loc-bar">`;
+            data.surveyNumbers.forEach((sn) => {
+                const active = sn === selected ? " active" : "";
+                html += `<button type="button" class="calc-asr-loc-chip${active}" data-survey="${sn}">${sn}</button>`;
+            });
+            html += `</div>`;
+        }
+
+        html += `<div class="calc-asr-table-scroll"><table class="calc-asr-mini-table">`;
+        html += `<thead><tr><th class="calc-th-subzone">${t("asrSubzone", lang)}</th>`;
+        rateTypes.forEach((rt) => html += `<th>${rt.label}</th>`);
+        if (cols.unit)      html += `<th>${t("asrUnit", lang)}</th>`;
+        if (cols.hasSurvey) html += `<th></th>`;
+        html += `</tr></thead><tbody>`;
+
+        rows.forEach((row, idx) => {
+            html += `<tr>`;
+            const subzoneLabel = row.zoneNo
+                ? `<span class="asr-zone-no">${row.zoneNo}</span> ${row.subzone || "—"}`
+                : (row.subzone || "—");
+            html += `<td class="calc-asr-subzone">${subzoneLabel}</td>`;
+
+            rateTypes.forEach((rt) => {
+                const val = row[rt.field];
+                if (val > 0) {
+                    html += `<td><button type="button" class="calc-rate-chip" data-rate="${val}" data-label="${rt.label}" title="${rt.label}: ₹${Number(val).toLocaleString("en-IN")}">₹${Number(val).toLocaleString("en-IN")}</button></td>`;
+                } else {
+                    html += `<td class="calc-cell-na">—</td>`;
+                }
+            });
+
+            if (cols.unit)      html += `<td class="calc-asr-unit">${row.unit || "—"}</td>`;
+            if (cols.hasSurvey) html += `<td class="calc-survey-cell">${row.hasSurvey ? `<button type="button" class="calc-survey-btn" data-row="${idx}" title="${t("asrSurveyNumbers", lang)}">📋 ${t("asrSurveysBtn", lang)}</button>` : ""}</td>`;
+            html += `</tr>`;
+
+            // Hidden expand row for survey numbers
+            if (row.hasSurvey) {
+                html += `<tr class="calc-survey-expand hidden" data-expand="${idx}">
+                    <td colspan="${totalCols}" class="calc-survey-expand-td">
+                        <div id="calc-survey-content-${idx}" class="calc-survey-content">
+                            <span class="calc-survey-loading">${t("asrLoadingSurveys", lang)}</span>
+                        </div>
+                    </td>
+                </tr>`;
+            }
+        });
+
+        html += `</tbody></table></div>`;
+        html += `<p class="calc-asr-pick-hint">↑ ${t("calcAsrPickPrompt", lang)}</p>`;
+        html += `</div>`;
+
+        container.innerHTML = html;
+        container.classList.remove("hidden");
+    }
+
+    async function fetchCalcRates() {
+        const taluka  = document.querySelector("#calc-asr-taluka")?.value;
+        const village = document.querySelector("#calc-asr-village")?.value;
+        const btn     = document.querySelector("#calc-asr-fetch-btn");
+        const lang    = getLang();
+
+        if (!taluka || !village) {
+            calcSetStatus(t("asrValidation", lang), true);
+            return;
+        }
+
+        calcSetStatus(t("asrLoading", lang), false);
+        if (btn) btn.disabled = true;
+        const container = document.querySelector("#calc-asr-results");
+        if (container) container.classList.add("hidden");
+
+        try {
+            const data = await apiGet(
+                `/get-rates?taluka=${encodeURIComponent(taluka)}&village=${encodeURIComponent(village)}`,
+                90000
+            );
+            if (!data || !data.entries) throw new Error(t("asrNoData", lang));
+            renderCalcResults(data, lang);
+            calcSetStatus(t("asrSuccess", lang), false);
+        } catch (err) {
+            calcSetStatus(err.message || t("asrError", lang), true);
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    async function loadCalcVillages(talukaName) {
+        const select = document.querySelector("#calc-asr-village");
+        const lang   = getLang();
+        if (!select) return;
+        if (!talukaName) { setSelectLoading(select, t("asrSelectVillage", lang), true); return; }
+        const prev = select.value;
+        setSelectLoading(select, t("asrLoadingVillages", lang), true);
+        try {
+            const data = await apiGet(`/get-villages?taluka=${encodeURIComponent(talukaName)}`, 60000);
+            fillSelect(select, data.villages || [], t("asrChooseVillage", lang), prev);
+        } catch (_) {
+            setSelectLoading(select, t("asrLoadVillagesFailed", lang), true);
+        }
+    }
+
+    async function loadCalcTalukas() {
+        const select = document.querySelector("#calc-asr-taluka");
+        const lang   = getLang();
+        if (!select) return;
+        const prev = select.value;
+        setSelectLoading(select, t("asrLoadingTalukas", lang), true);
+        try {
+            const data = await loadStaticLocations();
+            const names = (data.talukas || []).map((i) => (typeof i === "string" ? i : i.name)).filter(Boolean);
+            if (names.length) {
+                fillSelect(select, names, t("asrSelectTaluka", lang), prev, true);
+                if (select.value) await loadCalcVillages(select.value);
+                return;
+            }
+        } catch (_) { /* fall through */ }
+        try {
+            const data = await apiGet("/get-talukas");
+            fillSelect(select, data.talukas || [], t("asrSelectTaluka", lang), prev, true);
+            if (select.value) await loadCalcVillages(select.value);
+        } catch (_) {
+            setSelectLoading(select, t("asrLoadTalukasFailed", lang), true);
+        }
+    }
+
+    function initCalcAsr() {
+        const talukaSelect  = document.querySelector("#calc-asr-taluka");
+        const villageSelect = document.querySelector("#calc-asr-village");
+        const fetchBtn      = document.querySelector("#calc-asr-fetch-btn");
+        const container     = document.querySelector("#calc-asr-results");
+        if (!talukaSelect || !fetchBtn) return;
+
+        loadCalcTalukas();
+
+        talukaSelect.addEventListener("change", (e) => {
+            if (container) container.classList.add("hidden");
+            calcSetStatus("", false);
+            loadCalcVillages(e.target.value);
+        });
+
+        villageSelect?.addEventListener("change", () => {
+            if (container) container.classList.add("hidden");
+            calcSetStatus("", false);
+        });
+
+        fetchBtn.addEventListener("click", fetchCalcRates);
+
+        // Single delegated listener for the results container
+        if (container) {
+            container.addEventListener("click", async (e) => {
+                // Rate chip → fill input
+                const rateChip = e.target.closest(".calc-rate-chip");
+                if (rateChip) {
+                    calcFillRate(rateChip.dataset.rate, rateChip.dataset.label);
+                    container.querySelectorAll(".calc-rate-chip").forEach((c) => c.classList.remove("selected"));
+                    rateChip.classList.add("selected");
+                    return;
+                }
+
+                // Location type chip → switch survey section
+                const locChip = e.target.closest(".calc-asr-loc-chip");
+                if (locChip && calcAsrResult) {
+                    const key = locChip.dataset.survey;
+                    if (calcAsrResult.surveyData && calcAsrResult.surveyData[key]) {
+                        calcAsrResult.entries = calcAsrResult.surveyData[key];
+                        calcAsrResult.selectedSurvey = key;
+                        renderCalcResults(calcAsrResult, getLang());
+                    }
+                    return;
+                }
+
+                // Survey number button → fetch and show parcel numbers
+                const surveyBtn = e.target.closest(".calc-survey-btn");
+                if (surveyBtn && calcAsrResult) {
+                    const rowIdx     = parseInt(surveyBtn.dataset.row, 10);
+                    const expandRow  = container.querySelector(`[data-expand="${rowIdx}"]`);
+                    const expandDiv  = container.querySelector(`#calc-survey-content-${rowIdx}`);
+                    if (!expandRow || !expandDiv) return;
+
+                    // Toggle if already loaded
+                    if (expandRow.classList.contains("calc-survey-loaded")) {
+                        expandRow.classList.toggle("hidden");
+                        return;
+                    }
+
+                    expandRow.classList.remove("hidden");
+                    const lang = getLang();
+                    try {
+                        const surveyParam = calcAsrResult.selectedSurvey
+                            ? `&survey=${encodeURIComponent(calcAsrResult.selectedSurvey)}`
+                            : "";
+                        const data = await apiGet(
+                            `/get-surveys?taluka=${encodeURIComponent(calcAsrResult.taluka)}&village=${encodeURIComponent(calcAsrResult.village)}&row=${rowIdx}${surveyParam}`,
+                            90000
+                        );
+                        const text = data.surveys || t("asrNoSurveys", lang);
+                        expandDiv.innerHTML = `<span class="calc-survey-nos">${text}</span>`;
+                        expandRow.classList.add("calc-survey-loaded");
+                    } catch (err) {
+                        expandDiv.innerHTML = `<span class="asr-error-text">${err.message || t("asrError", lang)}</span>`;
+                    }
+                }
+            });
+        }
+    }
+
+    window.initCalcAsr = initCalcAsr;
 })();

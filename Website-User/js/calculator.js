@@ -4,7 +4,8 @@
 const CONSTANTS = {
     SQ_FT_TO_SQ_M: 0.092903,
     MAX_BUILT_UP_FSI: 1.76,
-    BETTERMENT_RATE_RATIO: 1670 / 2100
+    BETTERMENT_RATE_RATIO: 1670 / 2100,
+    BETTERMENT_FIXED_RATE: 1836   // Rs/sq.m fixed rate for betterment charges
 };
 
 function convertSqFtToSqM(sqFt) {
@@ -34,15 +35,20 @@ function formatDateTime() {
     });
 }
 
-function calculateOpenPlot(plotAreaSqM, asrRate) {
-    const bettermentRate = asrRate * CONSTANTS.BETTERMENT_RATE_RATIO;
+// authority: "csmrd" (10%) | "municipal" (100%)
+function calculateOpenPlot(plotAreaSqM, asrRate, authority) {
+    const auth = authority === "csmrd" ? "csmrd" : "municipal";
+    const bettermentRate = CONSTANTS.BETTERMENT_FIXED_RATE;   // 1836 Rs/sq.m fixed
+    const bettermentPct  = auth === "csmrd" ? 0.10 : 1.0;
+    const bettermentLabel = auth === "csmrd" ? "10%" : "100%";
+
     const charges = [
-        { serial: 1, name: "Scrutiny Fee", rate: "4", pct: "NA", amount: plotAreaSqM * 4 },
-        { serial: 2, name: "Land Dev Charges (eASR)", rate: formatRate(asrRate), pct: "1.5%", amount: plotAreaSqM * asrRate * 0.015 },
-        { serial: 3, name: "Betterment Charges", rate: formatRate(bettermentRate), pct: "75%", amount: plotAreaSqM * bettermentRate * 0.75 }
+        { serial: 1, name: "Scrutiny Fee",            rate: "4",                        pct: "NA",          amount: plotAreaSqM * 4 },
+        { serial: 2, name: "Land Dev Charges (eASR)", rate: formatRate(asrRate),        pct: "1.5%",        amount: plotAreaSqM * asrRate * 0.015 },
+        { serial: 3, name: "Betterment Charges",      rate: formatRate(bettermentRate), pct: bettermentLabel, amount: plotAreaSqM * bettermentRate * bettermentPct }
     ];
     const total = charges.reduce((s, c) => s + c.amount, 0);
-    return { plotAreaSqM, asrRate, charges, total, type: "open-plot" };
+    return { plotAreaSqM, asrRate, authority: auth, charges, total, type: "open-plot" };
 }
 
 function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins) {
@@ -62,18 +68,15 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins) {
 
     const bettermentRate = asrRate * CONSTANTS.BETTERMENT_RATE_RATIO;
     const scrutinyArea = res + comm;
-    const openPlotArea = Math.max(0, plotAreaSqM - res - comm);
-    const bettermentPct = openPlotArea > 0 ? "75%" : "0%";
-    const bettermentAmt = openPlotArea > 0 ? openPlotArea * bettermentRate * 0.75 : 0;
 
     const charges = [
         { name: "Scrutiny Fee", rate: "4", pct: "NA", amount: scrutinyArea * 4 },
-        { name: "Betterment Charges", rate: formatRate(bettermentRate), pct: bettermentPct, amount: bettermentAmt },
+        { name: "Betterment Charges", rate: formatRate(bettermentRate), pct: "0%", amount: 0 },
         { name: "Land Dev Charges (eASR)", rate: formatRate(asrRate), pct: "1.5%", amount: plotAreaSqM * asrRate * 0.015 },
         { name: "City Dev Charges - Res", rate: formatRate(asrRate), pct: "2%", amount: res * asrRate * 0.02 },
         { name: "City Dev Charges - Comm", rate: formatRate(asrRate), pct: "4%", amount: comm * asrRate * 0.04 },
-        { name: "Ancillary", rate: formatRate(asrRate), pct: "10%", amount: ancillaryArea * asrRate * 0.10 },
-        { name: "Area as per Tip", rate: "As per Ancillary", pct: ancillaryArea > 0 ? "10%" : "", amount: ancillaryArea * asrRate * 0.10 },
+        { name: "Ancillary", rate: formatRate(asrRate), pct: "1%", amount: ancillaryArea * asrRate * 0.01 },
+        { name: "Area as per Tip", rate: "As per Ancillary", pct: ancillaryArea > 0 ? "1%" : "", amount: ancillaryArea * asrRate * 0.01 },
         { name: "Marginal Distance Penalty", rate: formatRate(asrRate), pct: "10%", amount: margins * asrRate * 0.10 }
     ];
 

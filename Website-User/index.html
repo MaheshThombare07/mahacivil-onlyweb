@@ -3,18 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f5c52">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="description" content="MahaCivil — Civil charges calculator and Sanctioned DP maps for Chhatrapati Sambhajinagar">
     <title>MahaCivil | Chhatrapati Sambhajinagar</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=7">
+    <link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body>
     <!-- Full-screen map modal -->
     <div id="map-viewer" class="map-modal hidden" role="dialog" aria-modal="true">
         <div class="map-modal-header">
-            <h2 id="map-title">Sector 01</h2>
+            <h2 id="map-title"><span id="map-sector-name">Sector 01</span> <span class="map-firm-name">Vaibhav Budhwant &amp; Associates</span></h2>
             <button type="button" id="map-close" class="map-close-btn" aria-label="Close map">&times;</button>
         </div>
         <div class="map-frame-wrap">
@@ -69,32 +73,38 @@
     <main>
         <!-- Hero -->
         <section id="home" class="hero section">
-            <div class="hero-bg-pattern" aria-hidden="true"></div>
-            <div class="container hero-grid">
-                <div class="hero-text">
-                    <p class="hero-tag" data-i18n="heroTag">Chhatrapati Sambhajinagar</p>
-                    <h1 data-i18n="heroTitle">Civil Charges &amp; Development Plan Portal</h1>
-                    <p class="hero-desc" data-i18n="heroDesc">
-                        Calculate Open Plot and Built-Up charges, browse sanctioned DP 2022-42 sector maps,
-                        and download professional PDF receipts — all in one place.
-                    </p>
-                    <div class="hero-actions">
-                        <a href="#calculator" class="btn btn-primary" data-i18n="heroCtaCalc">Open Calculator</a>
-                        <a href="#asr-rates" class="btn btn-ghost" data-i18n="navAsr">eASR Rates</a>
-                        <a href="#dp-maps" class="btn btn-outline" data-i18n="heroCtaDp">View DP Maps</a>
-                    </div>
-                    <div class="hero-stats">
-                        <div class="hero-stat">
-                            <strong>2</strong>
-                            <span data-i18n="heroStatCalc">Calculators</span>
+            <div class="hero-bg-illustration" aria-hidden="true">
+                <img src="images/hero-cityscape.png" alt="" width="800" height="450" loading="eager" decoding="async">
+            </div>
+            <div class="container hero-inner">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <p class="hero-tag" data-i18n="heroTag">Chhatrapati Sambhajinagar</p>
+                        <h1>
+                            <span data-i18n="heroTitleLead">Gunthewari Charges &amp; Development Plan</span><span class="hero-title-accent" data-i18n="heroTitleAccent"> Portal</span>
+                        </h1>
+                        <p class="hero-desc" data-i18n="heroDesc">
+                            Calculate Open Plot and Built-Up charges, browse sanctioned DP 2022-42 sector maps,
+                            and download professional PDF receipts — all in one place.
+                        </p>
+                        <div class="hero-actions">
+                            <a href="#calculator" class="btn btn-primary" data-i18n="heroCtaCalc">Open Calculator</a>
+                            <a href="#asr-rates" class="btn btn-ghost" data-i18n="navAsr">eASR Rates</a>
+                            <a href="#dp-maps" class="btn btn-outline" data-i18n="heroCtaDp">View DP Maps</a>
                         </div>
-                        <div class="hero-stat">
-                            <strong>11</strong>
-                            <span data-i18n="heroStatDp">DP Sectors</span>
-                        </div>
-                        <div class="hero-stat">
-                            <strong>EN/MR</strong>
-                            <span data-i18n="heroStatLang">Bilingual</span>
+                        <div class="hero-stats">
+                            <div class="hero-stat">
+                                <strong>2</strong>
+                                <span data-i18n="heroStatCalc">Calculators</span>
+                            </div>
+                            <div class="hero-stat">
+                                <strong>11</strong>
+                                <span data-i18n="heroStatDp">DP Sectors</span>
+                            </div>
+                            <div class="hero-stat">
+                                <strong>EN/MR</strong>
+                                <span data-i18n="heroStatLang">Bilingual</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -138,8 +148,54 @@
                     <button type="button" class="calc-tab" data-calc="built-up" data-i18n="builtUpShort">Built Up</button>
                 </div>
 
+                <!-- Authority selector — shown only for Open Plot -->
+                <div class="authority-selector" id="authority-selector">
+                    <span class="authority-label" data-i18n="authorityLabel">Authority:</span>
+                    <button type="button" class="authority-btn" data-authority="csmrd">CSMRD</button>
+                    <button type="button" class="authority-btn active" data-authority="municipal" data-i18n="authorityMunicipal">Municipal</button>
+                </div>
+
                 <div class="calc-layout">
                     <div class="calc-form card">
+
+                        <!-- Step 1: eASR Rate Lookup -->
+                        <div class="calc-step-block">
+                            <div class="calc-step-header">
+                                <span class="calc-step-badge">1</span>
+                                <span data-i18n="calcAsrStep1">Lookup eASR Rate</span>
+                            </div>
+                            <div class="calc-district-badge">
+                                <span class="calc-district-icon">📍</span>
+                                <span data-i18n="asrSelectedDistrict">Selected District</span>:
+                                <strong data-i18n="heroTag">Chhatrapati Sambhajinagar</strong>
+                            </div>
+                            <div class="form-grid asr-form-grid">
+                                <div class="form-group">
+                                    <label for="calc-asr-taluka" data-i18n="asrTaluka">Taluka</label>
+                                    <select id="calc-asr-taluka" class="form-select"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="calc-asr-village" data-i18n="asrVillage">Village</label>
+                                    <select id="calc-asr-village" class="form-select" disabled>
+                                        <option value="" data-i18n="asrSelectVillage">Select taluka first</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions calc-asr-actions">
+                                <button type="button" id="calc-asr-fetch-btn" class="btn btn-primary" data-i18n="asrFetch">Fetch Rates</button>
+                            </div>
+                            <p id="calc-asr-status" class="asr-status muted" aria-live="polite"></p>
+                            <div id="calc-asr-results" class="calc-asr-results hidden"></div>
+                        </div>
+
+                        <div class="calc-step-divider"></div>
+
+                        <!-- Step 2: Calculate -->
+                        <div class="calc-step-header calc-step-header-2">
+                            <span class="calc-step-badge">2</span>
+                            <span data-i18n="calcAsrStep2">Enter Details &amp; Calculate</span>
+                        </div>
+
                         <div class="converter-box">
                             <h3 data-i18n="convertSqFt">Convert Sq.ft to Sq.m:</h3>
                             <div class="form-row">
@@ -166,7 +222,9 @@
                                 <p class="field-error hidden" id="err-plot-sqm"></p>
                             </div>
                             <div class="form-group">
-                                <label for="asr-rate" data-i18n="asrRate">eASR Rate</label>
+                                <label for="asr-rate" data-i18n="asrRate">eASR Rate
+                                    <span class="rate-hint-tag" id="calc-selected-rate-badge"></span>
+                                </label>
                                 <div class="form-row">
                                     <input type="text" class="form-input" id="asr-rate" inputmode="decimal" placeholder="Enter rate" autocomplete="off">
                                     <div class="stepper-group">
@@ -175,6 +233,7 @@
                                     </div>
                                 </div>
                                 <p class="field-error hidden" id="err-asr-rate"></p>
+                                <p class="calc-rate-hint muted" data-i18n="calcAsrHint">Click a rate above to auto-fill, or enter manually.</p>
                             </div>
                         </div>
 

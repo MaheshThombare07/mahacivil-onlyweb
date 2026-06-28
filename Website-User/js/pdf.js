@@ -14,9 +14,13 @@ function buildReceiptHtml(result, lang) {
 
     let summaryHtml = "";
     if (isOpen) {
+        const authLabel = result.authority === "municipal"
+            ? (lang === "mr" ? "महानगरपालिका" : "Municipal")
+            : "CSMRD";
         summaryHtml = `
             <div class="summary-row"><span>${t("plotArea", lang)}</span><span>${formatArea(result.plotAreaSqM)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("asrRate", lang)}</span><span>${formatRate(result.asrRate)}</span></div>
+            <div class="summary-row"><span>${t("authorityLabel", lang)}</span><span><strong>${authLabel}</strong></span></div>
         `;
     } else {
         const s = result.summary;
@@ -42,31 +46,50 @@ function buildReceiptHtml(result, lang) {
         const label = chargeLabel(c.name, lang);
         const rate = c.rate === "As per Ancillary" ? (lang === "mr" ? "अनुषंगिक नुसार" : "As per Ancillary") : c.rate;
         if (isOpen) {
-            return `<tr><td>${c.serial}</td><td class="charge-name">${label}</td><td>${rate}</td><td>${c.pct}</td><td>${formatCurrency(c.amount)}</td></tr>`;
+            return `<tr><td>${c.serial}</td><td class="charge-name">${label}</td><td>${rate}</td><td>${c.pct}</td><td class="charge-amount">${formatCurrency(c.amount)}</td></tr>`;
         }
-        return `<tr><td class="charge-name">${label}</td><td>${rate}</td><td>${c.pct || "-"}</td><td>${formatCurrency(c.amount)}</td></tr>`;
+        return `<tr><td class="charge-name">${label}</td><td>${rate}</td><td>${c.pct || "-"}</td><td class="charge-amount">${formatCurrency(c.amount)}</td></tr>`;
+    }).join("");
+
+    const mobileCards = result.charges.map(c => {
+        const label = chargeLabel(c.name, lang);
+        const rate = c.rate === "As per Ancillary" ? (lang === "mr" ? "अनुषंगिक नुसार" : "As per Ancillary") : c.rate;
+        const serial = isOpen ? `<span class="receipt-card-serial">${c.serial}</span>` : "";
+        return `
+            <div class="receipt-charge-card">
+                ${serial}
+                <div class="receipt-card-name">${label}</div>
+                <div class="receipt-card-meta">
+                    <span><em>${t("rate", lang)}:</em> ${rate}</span>
+                    <span><em>${t("percentage", lang)}:</em> ${c.pct || "-"}</span>
+                </div>
+                <div class="receipt-card-amount">${formatCurrency(c.amount)}</div>
+            </div>`;
     }).join("");
 
     const total = formatTotal(result.total);
 
     return `
-        <div class="receipt" style="border:1px solid #bdbdbd;border-radius:12px;overflow:hidden;font-family:sans-serif;">
-            <div class="receipt-header" style="background:#002d5b;color:#fff;padding:14px 16px;">
-                <div style="color:#f9a825;font-weight:700;">MahaCivil</div>
-                <h4 style="margin:4px 0 0;">${title}</h4>
-                <div style="font-size:12px;opacity:0.85;margin-top:6px;">${t("dateTime", lang)}: ${dt}</div>
+        <div class="receipt">
+            <div class="receipt-header">
+                <div class="receipt-brand">MahaCivil</div>
+                <h4>${title}</h4>
+                <div class="receipt-date">${t("dateTime", lang)}: ${dt}</div>
             </div>
-            <div style="padding:16px;">
-                <h5 style="color:#002d5b;margin-bottom:8px;">${t("userInputSummary", lang)}</h5>
+            <div class="receipt-body">
+                <h5>${t("userInputSummary", lang)}</h5>
                 ${summaryHtml}
-                <h5 style="color:#002d5b;margin:16px 0 8px;">${title}</h5>
-                <table class="charges-table" style="width:100%;border-collapse:collapse;font-size:11px;">
-                    <thead><tr style="background:#eee;">${tableHead}</tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
-                <div style="display:flex;justify-content:space-between;background:#002d5b;color:#fff;padding:14px 16px;margin-top:12px;border-radius:8px;font-weight:700;">
-                    <span style="color:#f9a825;">${t("total", lang)}</span>
-                    <span>${total}</span>
+                <h5 class="receipt-charges-heading">${title}</h5>
+                <div class="receipt-charges-mobile">${mobileCards}</div>
+                <div class="receipt-table-wrap">
+                    <table class="charges-table receipt-charges-desktop">
+                        <thead><tr>${tableHead}</tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <div class="receipt-total">
+                    <span class="receipt-total-label">${t("total", lang)}</span>
+                    <span class="receipt-total-value">${total}</span>
                 </div>
             </div>
         </div>

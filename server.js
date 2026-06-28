@@ -1,7 +1,7 @@
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
-const { scrapeTalukas, scrapeVillages, scrapeRates, ScraperError } = require("./lib/easr-scraper");
+const { scrapeTalukas, scrapeVillages, scrapeRates, scrapeSubzoneSurveys, ScraperError } = require("./lib/easr-scraper");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 8000;
@@ -38,6 +38,22 @@ app.get("/get-villages", async (req, res) => {
         res.json(data);
     } catch (err) {
         sendError(res, err, "Could not load villages.");
+    }
+});
+
+app.get("/get-surveys", async (req, res) => {
+    const taluka = String(req.query.taluka || "").trim();
+    const village = String(req.query.village || "").trim();
+    const row = parseInt(req.query.row, 10);
+    const survey = String(req.query.survey || "").trim(); // optional location/survey-type key
+    if (!taluka || !village || isNaN(row) || row < 0) {
+        return res.status(400).json({ detail: "taluka, village, and row (>=0) are required." });
+    }
+    try {
+        const data = await scrapeSubzoneSurveys(taluka, village, row, survey || undefined);
+        res.json(data);
+    } catch (err) {
+        sendError(res, err, "Could not fetch survey numbers.");
     }
 });
 

@@ -4,6 +4,7 @@
 (function () {
     let lang = "en";
     let calcType = "open-plot";
+    let calcAuthority = "municipal"; // "csmrd" | "municipal" (Open Plot only)
     let lastResult = null;
 
     const $ = (sel) => document.querySelector(sel);
@@ -125,14 +126,28 @@
                 $$(".calc-tab").forEach((b) => b.classList.remove("active"));
                 btn.classList.add("active");
                 const buFields = $("#built-up-fields");
+                const authSel = $("#authority-selector");
                 if (calcType === "built-up") {
                     buFields.classList.remove("hidden");
+                    if (authSel) authSel.classList.add("hidden");
                 } else {
                     buFields.classList.add("hidden");
+                    if (authSel) authSel.classList.remove("hidden");
                 }
                 resetReceipt();
             });
         });
+
+        // Authority button clicks
+        $$(".authority-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                calcAuthority = btn.dataset.authority;
+                $$(".authority-btn").forEach((b) => b.classList.remove("active"));
+                btn.classList.add("active");
+                resetReceipt();
+            });
+        });
+
     }
 
     function resetReceipt() {
@@ -189,6 +204,15 @@
         if (window.MahaAuth && typeof window.MahaAuth.markFeatureUsed === "function") {
             window.MahaAuth.markFeatureUsed("usedCalculator");
         }
+
+        if (window.matchMedia("(max-width: 768px)").matches) {
+            const resultSection = $("#receipt-section");
+            if (resultSection) {
+                setTimeout(() => {
+                    resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 80);
+            }
+        }
     }
 
     function executeCalculate() {
@@ -196,7 +220,7 @@
         const asrRate = parseNum($("#asr-rate").value);
 
         if (calcType === "open-plot") {
-            lastResult = calculateOpenPlot(plotSqM, asrRate);
+            lastResult = calculateOpenPlot(plotSqM, asrRate, calcAuthority);
         } else {
             lastResult = calculateBuiltUp(
                 plotSqM, asrRate,
@@ -264,7 +288,7 @@
     }
 
     function openMapViewer(title, url) {
-        $("#map-title").textContent = title;
+        $("#map-sector-name").textContent = title;
         $("#map-frame").src = url;
         $("#map-viewer").classList.remove("hidden");
         document.body.style.overflow = "hidden";
@@ -337,6 +361,9 @@
         initDeveloperModal();
         if (typeof window.initAsr === "function") {
             window.initAsr();
+        }
+        if (typeof window.initCalcAsr === "function") {
+            window.initCalcAsr();
         }
     }
 
