@@ -14,12 +14,11 @@
     const RATES_MAX_POLLS = 120;
 
     function getApiBase() {
-        if (window.ASR_API_BASE) return window.ASR_API_BASE.replace(/\/$/, "");
-        if (window.location.protocol === "file:" || window.location.port !== "8000") {
-            return "http://127.0.0.1:8000";
-        }
-        return window.location.origin;
+    if (window.ASR_API_BASE) {
+        return window.ASR_API_BASE.replace(/\/$/, "");
     }
+    return window.location.origin;
+}
 
     function getLang() {
         return window.__lang || "en";
