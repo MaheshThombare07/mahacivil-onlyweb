@@ -130,6 +130,34 @@
         }
     }
 
+    function getCalcSearchMode() {
+        const checked = document.querySelector('input[name="calc-asr-search-mode"]:checked');
+        return checked && checked.value === "survey" ? "survey" : "location";
+    }
+
+    function getCalcSurveyNoInput() {
+        return String(document.querySelector("#calc-asr-survey-no")?.value || "").trim();
+    }
+
+    function updateCalcSearchModeUI() {
+        const surveyGroup = document.querySelector("#calc-asr-survey-group");
+        const surveyInput = document.querySelector("#calc-asr-survey-no");
+        if (!surveyGroup) return;
+        const isSurvey = getCalcSearchMode() === "survey";
+        surveyGroup.classList.toggle("hidden", !isSurvey);
+        if (surveyInput) {
+            surveyInput.required = isSurvey;
+            if (!isSurvey) surveyInput.value = "";
+        }
+    }
+
+    function calcPageFootnote(data, lang) {
+        if (data.searchMode === "survey" && data.surveyNo) {
+            return t("asrSurveyResultNote", lang).replace("{survey}", data.surveyNo);
+        }
+        return t("calcAsrPickPrompt", lang);
+    }
+
     function updateDistrictField() {
         const field = $("#asr-district");
         if (!field) return;
@@ -808,8 +836,10 @@
         });
 
         html += `</tbody></table></div>`;
-        html += renderPaginationBar(data.pagination, "calc-asr-pagination");
-        html += `<p class="calc-asr-pick-hint">↑ ${t("calcAsrPickPrompt", lang)}</p>`;
+        if (data.searchMode !== "survey") {
+            html += renderPaginationBar(data.pagination, "calc-asr-pagination");
+        }
+        html += `<p class="calc-asr-pick-hint">${data.searchMode === "survey" ? calcPageFootnote(data, lang) : `↑ ${t("calcAsrPickPrompt", lang)}`}</p>`;
         html += `</div>`;
 
         container.innerHTML = html;
@@ -817,6 +847,8 @@
     }
 
     async function loadCalcRatesPage(page) {
+        if (getCalcSearchMode() === "survey") return;
+
         const taluka  = document.querySelector("#calc-asr-taluka")?.value;
         const village = document.querySelector("#calc-asr-village")?.value;
         const btn     = document.querySelector("#calc-asr-fetch-btn");
@@ -848,9 +880,16 @@
         const village = document.querySelector("#calc-asr-village")?.value;
         const btn     = document.querySelector("#calc-asr-fetch-btn");
         const lang    = getLang();
+        const searchMode = getCalcSearchMode();
+        const surveyNo = getCalcSurveyNoInput();
 
         if (!taluka || !village) {
             calcSetStatus(t("asrValidation", lang), true);
+            return;
+        }
+        if (searchMode === "survey" && !surveyNo) {
+            calcSetStatus(t("asrEnterSurveyNo", lang), true);
+            document.querySelector("#calc-asr-survey-no")?.focus();
             return;
         }
 
@@ -860,9 +899,10 @@
         if (container) container.classList.add("hidden");
 
         try {
+            const surveyParam = searchMode === "survey" ? `&surveyNo=${encodeURIComponent(surveyNo)}` : "";
             const data = await apiGet(
-                `/get-rates?taluka=${encodeURIComponent(taluka)}&village=${encodeURIComponent(village)}`,
-                90000
+                `/get-rates?taluka=${encodeURIComponent(taluka)}&village=${encodeURIComponent(village)}${surveyParam}`,
+                searchMode === "survey" ? 180000 : 90000
             );
             if (!data || !data.entries) throw new Error(t("asrNoData", lang));
             renderCalcResults(data, lang);
@@ -921,6 +961,22 @@
         if (!talukaSelect || !fetchBtn) return;
 
         loadCalcTalukas();
+        updateCalcSearchModeUI();
+
+        document.querySelectorAll('input[name="calc-asr-search-mode"]').forEach((radio) => {
+            radio.addEventListener("change", () => {
+                updateCalcSearchModeUI();
+                if (container) container.classList.add("hidden");
+                calcSetStatus("", false);
+            });
+        });
+
+        document.querySelector("#calc-asr-survey-no")?.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                fetchCalcRates();
+            }
+        });
 
         talukaSelect.addEventListener("change", (e) => {
             if (container) container.classList.add("hidden");
