@@ -644,8 +644,8 @@ img, svg {
 
 .calc-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    grid-template-columns: 1fr;
+    gap: 20px;
     align-items: start;
 }
 
@@ -654,6 +654,13 @@ img, svg {
     flex-direction: column;
     gap: 20px;
     min-width: 0;
+}
+
+@media (min-width: 901px) {
+    .calc-layout {
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
 }
 
 .calc-panel {

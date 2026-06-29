@@ -82,7 +82,14 @@ function sendError(res, err, fallback) {
     res.status(500).json({ detail: err.message || fallback });
 }
 
-app.use(express.static(WEB_DIR, { index: "index.html" }));
+app.use(express.static(WEB_DIR, {
+    index: "index.html",
+    setHeaders(res, filePath) {
+        if (filePath.endsWith(".html")) {
+            res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        }
+    },
+}));
 
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`MahaCivil running at http://0.0.0.0:${PORT}`);
