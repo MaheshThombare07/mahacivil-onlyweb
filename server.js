@@ -62,11 +62,12 @@ app.get("/get-rates", async (req, res) => {
     const taluka = String(req.query.taluka || "").trim();
     const village = String(req.query.village || "").trim();
     const page = parseInt(req.query.page, 10) || 1;
+    const surveyNo = String(req.query.surveyNo || req.query.survey || "").trim();
     if (!taluka || !village) {
         return res.status(400).json({ detail: "taluka and village are required." });
     }
     try {
-        const data = await scrapeRates(taluka, village, page);
+        const data = await scrapeRates(taluka, village, page, surveyNo || undefined);
         res.json(data);
     } catch (err) {
         sendError(res, err, "Could not fetch rates.");

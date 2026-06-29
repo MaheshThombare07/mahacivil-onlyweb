@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=15">
+    <link rel="stylesheet" href="css/style.css?v=16">
 </head>
 <body>
     <!-- Full-screen map modal -->
@@ -301,6 +301,23 @@
                                 <select id="asr-village" class="form-select" disabled>
                                     <option value="" data-i18n="asrSelectVillage">Select taluka first</option>
                                 </select>
+                            </div>
+                            <div class="form-group full-width asr-search-mode-group">
+                                <span class="asr-search-mode-label" data-i18n="asrSearchBy">Search By</span>
+                                <div class="asr-search-mode-options" role="radiogroup" aria-label="Search by">
+                                    <label class="asr-mode-option">
+                                        <input type="radio" name="asr-search-mode" id="asr-mode-location" value="location" checked>
+                                        <span data-i18n="asrSearchLocation">Sub-zones</span>
+                                    </label>
+                                    <label class="asr-mode-option">
+                                        <input type="radio" name="asr-search-mode" id="asr-mode-survey" value="survey">
+                                        <span data-i18n="asrSearchSurvey">Survey No.</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group full-width hidden" id="asr-survey-group">
+                                <label for="asr-survey-no" data-i18n="asrEnterSurveyNo">Enter Survey No.</label>
+                                <input type="text" id="asr-survey-no" class="form-input" inputmode="text" autocomplete="off" placeholder="">
                             </div>
                         </div>
                         <div class="form-actions asr-form-actions">
@@ -607,10 +624,10 @@
 
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
-    <script src="js/i18n.js?v=6"></script>
+    <script src="js/i18n.js?v=7"></script>
     <script src="js/calculator.js?v=4"></script>
     <script src="js/pdf.js?v=4"></script>
-    <script src="js/asr.js?v=10"></script>
+    <script src="js/asr.js?v=11"></script>
     <script src="js/auth.js?v=5"></script>
     <script src="js/app.js?v=4"></script>
 </body>

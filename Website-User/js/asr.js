@@ -101,9 +101,33 @@
     }
 
     function pageFootnote(data, rowCount, lang) {
+        if (data.searchMode === "survey" && data.surveyNo) {
+            return t("asrSurveyResultNote", lang).replace("{survey}", data.surveyNo);
+        }
         const page = (data.pagination && data.pagination.currentPage) || 1;
         const note = t("asrPageNote", lang).replace("{page}", page);
         return `${note} · ${rowCount} ${t("asrRowCount", lang)}`;
+    }
+
+    function getSearchMode() {
+        const checked = document.querySelector('input[name="asr-search-mode"]:checked');
+        return checked && checked.value === "survey" ? "survey" : "location";
+    }
+
+    function getSurveyNoInput() {
+        return String($("#asr-survey-no")?.value || "").trim();
+    }
+
+    function updateSearchModeUI() {
+        const surveyGroup = $("#asr-survey-group");
+        const surveyInput = $("#asr-survey-no");
+        if (!surveyGroup) return;
+        const isSurvey = getSearchMode() === "survey";
+        surveyGroup.classList.toggle("hidden", !isSurvey);
+        if (surveyInput) {
+            surveyInput.required = isSurvey;
+            if (!isSurvey) surveyInput.value = "";
+        }
     }
 
     function updateDistrictField() {
@@ -444,7 +468,9 @@
             });
 
             html += `</tbody></table></div>`;
-            html += renderPaginationBar(data.pagination);
+            if (data.searchMode !== "survey") {
+                html += renderPaginationBar(data.pagination);
+            }
             html += `<p class="asr-footnote">${pageFootnote(data, rows.length, lang)}</p>`;
         }
 
@@ -468,17 +494,19 @@
         el.classList.toggle("asr-error", !!isError);
     }
 
-    async function pollRatesJob(taluka, village, gen, lang, page = 1) {
+    async function pollRatesJob(taluka, village, gen, lang, page = 1, surveyNo = "") {
         const pageParam = page > 1 ? `&page=${page}` : "";
+        const surveyParam = surveyNo ? `&surveyNo=${encodeURIComponent(surveyNo)}` : "";
         const data = await apiGet(
-            `/get-rates?taluka=${encodeURIComponent(taluka)}&village=${encodeURIComponent(village)}${pageParam}`,
-            90000
+            `/get-rates?taluka=${encodeURIComponent(taluka)}&village=${encodeURIComponent(village)}${pageParam}${surveyParam}`,
+            surveyNo ? 180000 : 90000
         );
         if (data && data.entries) return data;
         throw new Error("No rate entries returned.");
     }
 
     async function loadRatesPage(page) {
+        if (getSearchMode() === "survey") return;
         const taluka = $("#asr-taluka").value;
         const village = $("#asr-village").value;
         const lang = getLang();
@@ -509,9 +537,16 @@
         const village = $("#asr-village").value;
         const lang = getLang();
         const btn = $("#asr-fetch-btn");
+        const searchMode = getSearchMode();
+        const surveyNo = getSurveyNoInput();
 
         if (!taluka || !village) {
             setStatus(t("asrValidation", lang), true);
+            return;
+        }
+        if (searchMode === "survey" && !surveyNo) {
+            setStatus(t("asrEnterSurveyNo", lang), true);
+            $("#asr-survey-no")?.focus();
             return;
         }
 
@@ -521,7 +556,14 @@
         setPdfEnabled(false);
 
         try {
-            const data = await pollRatesJob(taluka, village, gen, lang);
+            const data = await pollRatesJob(
+                taluka,
+                village,
+                gen,
+                lang,
+                1,
+                searchMode === "survey" ? surveyNo : ""
+            );
             if (!data || gen !== ratesFetchGeneration) return;
             renderResults(data, lang);
             setStatus(t("asrSuccess", lang), false);
@@ -547,6 +589,23 @@
             if (ok) loadTalukas();
         });
         setPdfEnabled(false);
+        updateSearchModeUI();
+
+        document.querySelectorAll('input[name="asr-search-mode"]').forEach((radio) => {
+            radio.addEventListener("change", () => {
+                updateSearchModeUI();
+                ratesFetchGeneration++;
+                clearResults();
+                setStatus("", false);
+            });
+        });
+
+        $("#asr-survey-no")?.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                fetchRates();
+            }
+        });
 
         talukaSelect.addEventListener("change", (e) => {
             ratesFetchGeneration++;
