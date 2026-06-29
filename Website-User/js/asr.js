@@ -76,6 +76,36 @@
         return rows.some((r) => r.unit && r.unit.trim());
     }
 
+    function renderPaginationBar(pagination, extraClass = "") {
+        if (!pagination || !pagination.items || !pagination.items.length) return "";
+        const current = pagination.currentPage || 1;
+        let html = `<div class="asr-pagination${extraClass ? ` ${extraClass}` : ""}">`;
+        pagination.items.forEach((item) => {
+            if (!item || item.type === "page") {
+                const page = item && item.page != null ? item.page : item;
+                if (page === current) {
+                    html += `<span class="asr-page-current">${page}</span>`;
+                } else {
+                    html += `<button type="button" class="asr-page-link" data-page="${page}">${page}</button>`;
+                }
+            } else if (item.type === "ellipsis") {
+                if (item.page) {
+                    html += `<button type="button" class="asr-page-link asr-page-ellipsis" data-page="${item.page}" title="">…</button>`;
+                } else {
+                    html += `<span class="asr-page-ellipsis">…</span>`;
+                }
+            }
+        });
+        html += `</div>`;
+        return html;
+    }
+
+    function pageFootnote(data, rowCount, lang) {
+        const page = (data.pagination && data.pagination.currentPage) || 1;
+        const note = t("asrPageNote", lang).replace("{page}", page);
+        return `${note} · ${rowCount} ${t("asrRowCount", lang)}`;
+    }
+
     function updateDistrictField() {
         const field = $("#asr-district");
         if (!field) return;
@@ -414,7 +444,8 @@
             });
 
             html += `</tbody></table></div>`;
-            html += `<p class="asr-footnote">${t("asrAllPagesNote", lang)} · ${rows.length} ${t("asrRowCount", lang)}</p>`;
+            html += renderPaginationBar(data.pagination);
+            html += `<p class="asr-footnote">${pageFootnote(data, rows.length, lang)}</p>`;
         }
 
         html += `</div>`;
@@ -437,13 +468,40 @@
         el.classList.toggle("asr-error", !!isError);
     }
 
-    async function pollRatesJob(taluka, village, gen, lang) {
+    async function pollRatesJob(taluka, village, gen, lang, page = 1) {
+        const pageParam = page > 1 ? `&page=${page}` : "";
         const data = await apiGet(
-            `/get-rates?taluka=${encodeURIComponent(taluka)}&village=${encodeURIComponent(village)}`,
+            `/get-rates?taluka=${encodeURIComponent(taluka)}&village=${encodeURIComponent(village)}${pageParam}`,
             90000
         );
         if (data && data.entries) return data;
         throw new Error("No rate entries returned.");
+    }
+
+    async function loadRatesPage(page) {
+        const taluka = $("#asr-taluka").value;
+        const village = $("#asr-village").value;
+        const lang = getLang();
+        const btn = $("#asr-fetch-btn");
+
+        if (!taluka || !village) return;
+
+        const gen = ++ratesFetchGeneration;
+        setStatus(t("asrLoading", lang), false);
+        if (btn) btn.disabled = true;
+
+        try {
+            const data = await pollRatesJob(taluka, village, gen, lang, page);
+            if (!data || gen !== ratesFetchGeneration) return;
+            renderResults(data, lang);
+            setStatus(t("asrSuccess", lang), false);
+            $("#asr-results")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch (err) {
+            if (gen !== ratesFetchGeneration) return;
+            setStatus(formatApiError(err, lang, "asrError"), true);
+        } finally {
+            if (gen === ratesFetchGeneration && btn) btn.disabled = false;
+        }
     }
 
     async function fetchRates() {
@@ -505,6 +563,15 @@
         const resultsContainer = $("#asr-results");
         if (resultsContainer) {
             resultsContainer.addEventListener("click", async (e) => {
+                const pageLink = e.target.closest(".asr-page-link");
+                if (pageLink && lastAsrResult) {
+                    const page = parseInt(pageLink.dataset.page, 10);
+                    if (page && page !== (lastAsrResult.pagination && lastAsrResult.pagination.currentPage)) {
+                        loadRatesPage(page);
+                    }
+                    return;
+                }
+
                 // Survey section chip (portal-level survey dropdown switch)
                 const chip = e.target.closest(".asr-survey-chip");
                 if (chip && lastAsrResult) {
@@ -512,6 +579,9 @@
                     if (lastAsrResult.hasSurveyNumbers && lastAsrResult.surveyData && lastAsrResult.surveyData[surveyNo]) {
                         lastAsrResult.entries = lastAsrResult.surveyData[surveyNo];
                         lastAsrResult.selectedSurvey = surveyNo;
+                        if (lastAsrResult.paginationByKey && lastAsrResult.paginationByKey[surveyNo]) {
+                            lastAsrResult.pagination = lastAsrResult.paginationByKey[surveyNo];
+                        }
                         renderResults(lastAsrResult, getLang());
                     }
                     return;
@@ -537,8 +607,11 @@
                         const surveyParam = lastAsrResult.selectedSurvey
                             ? `&survey=${encodeURIComponent(lastAsrResult.selectedSurvey)}`
                             : "";
+                        const pageParam = lastAsrResult.pagination && lastAsrResult.pagination.currentPage > 1
+                            ? `&page=${lastAsrResult.pagination.currentPage}`
+                            : "";
                         const data = await apiGet(
-                            `/get-surveys?taluka=${encodeURIComponent(lastAsrResult.taluka)}&village=${encodeURIComponent(lastAsrResult.village)}&row=${rowIdx}${surveyParam}`,
+                            `/get-surveys?taluka=${encodeURIComponent(lastAsrResult.taluka)}&village=${encodeURIComponent(lastAsrResult.village)}&row=${rowIdx}${surveyParam}${pageParam}`,
                             90000
                         );
                         const text = data.surveys || t("asrNoSurveys", lang);
@@ -676,11 +749,39 @@
         });
 
         html += `</tbody></table></div>`;
+        html += renderPaginationBar(data.pagination, "calc-asr-pagination");
         html += `<p class="calc-asr-pick-hint">↑ ${t("calcAsrPickPrompt", lang)}</p>`;
         html += `</div>`;
 
         container.innerHTML = html;
         container.classList.remove("hidden");
+    }
+
+    async function loadCalcRatesPage(page) {
+        const taluka  = document.querySelector("#calc-asr-taluka")?.value;
+        const village = document.querySelector("#calc-asr-village")?.value;
+        const btn     = document.querySelector("#calc-asr-fetch-btn");
+        const lang    = getLang();
+
+        if (!taluka || !village) return;
+
+        calcSetStatus(t("asrLoading", lang), false);
+        if (btn) btn.disabled = true;
+
+        try {
+            const pageParam = page > 1 ? `&page=${page}` : "";
+            const data = await apiGet(
+                `/get-rates?taluka=${encodeURIComponent(taluka)}&village=${encodeURIComponent(village)}${pageParam}`,
+                90000
+            );
+            if (!data || !data.entries) throw new Error(t("asrNoData", lang));
+            renderCalcResults(data, lang);
+            calcSetStatus(t("asrSuccess", lang), false);
+        } catch (err) {
+            calcSetStatus(err.message || t("asrError", lang), true);
+        } finally {
+            if (btn) btn.disabled = false;
+        }
     }
 
     async function fetchCalcRates() {
@@ -778,6 +879,15 @@
         // Single delegated listener for the results container
         if (container) {
             container.addEventListener("click", async (e) => {
+                const pageLink = e.target.closest(".asr-page-link");
+                if (pageLink && calcAsrResult) {
+                    const page = parseInt(pageLink.dataset.page, 10);
+                    if (page && page !== (calcAsrResult.pagination && calcAsrResult.pagination.currentPage)) {
+                        loadCalcRatesPage(page);
+                    }
+                    return;
+                }
+
                 // Rate chip → fill input
                 const rateChip = e.target.closest(".calc-rate-chip");
                 if (rateChip) {
@@ -794,6 +904,9 @@
                     if (calcAsrResult.surveyData && calcAsrResult.surveyData[key]) {
                         calcAsrResult.entries = calcAsrResult.surveyData[key];
                         calcAsrResult.selectedSurvey = key;
+                        if (calcAsrResult.paginationByKey && calcAsrResult.paginationByKey[key]) {
+                            calcAsrResult.pagination = calcAsrResult.paginationByKey[key];
+                        }
                         renderCalcResults(calcAsrResult, getLang());
                     }
                     return;
@@ -819,8 +932,11 @@
                         const surveyParam = calcAsrResult.selectedSurvey
                             ? `&survey=${encodeURIComponent(calcAsrResult.selectedSurvey)}`
                             : "";
+                        const pageParam = calcAsrResult.pagination && calcAsrResult.pagination.currentPage > 1
+                            ? `&page=${calcAsrResult.pagination.currentPage}`
+                            : "";
                         const data = await apiGet(
-                            `/get-surveys?taluka=${encodeURIComponent(calcAsrResult.taluka)}&village=${encodeURIComponent(calcAsrResult.village)}&row=${rowIdx}${surveyParam}`,
+                            `/get-surveys?taluka=${encodeURIComponent(calcAsrResult.taluka)}&village=${encodeURIComponent(calcAsrResult.village)}&row=${rowIdx}${surveyParam}${pageParam}`,
                             90000
                         );
                         const text = data.surveys || t("asrNoSurveys", lang);

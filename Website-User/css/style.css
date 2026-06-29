@@ -1770,6 +1770,61 @@ img, svg {
     margin: 0;
 }
 
+.asr-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px 10px;
+    padding: 14px 16px;
+    background: #f0f0f0;
+    border-top: 1px solid var(--border);
+}
+
+.asr-page-link,
+.asr-page-current {
+    min-width: 1.6em;
+    padding: 2px 4px;
+    font-size: 0.88rem;
+    text-align: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.asr-page-link {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.asr-page-link:hover:not(:disabled) {
+    color: var(--primary-dark, #00695c);
+}
+
+.asr-page-link:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.asr-page-current {
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: default;
+}
+
+.asr-page-ellipsis {
+    padding: 0 2px;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+.calc-asr-pagination {
+    padding: 10px 12px;
+    margin-top: -4px;
+}
+
 .asr-no-data {
     padding: 24px;
 }

@@ -45,12 +45,13 @@ app.get("/get-surveys", async (req, res) => {
     const taluka = String(req.query.taluka || "").trim();
     const village = String(req.query.village || "").trim();
     const row = parseInt(req.query.row, 10);
+    const page = parseInt(req.query.page, 10) || 1;
     const survey = String(req.query.survey || "").trim(); // optional location/survey-type key
     if (!taluka || !village || isNaN(row) || row < 0) {
         return res.status(400).json({ detail: "taluka, village, and row (>=0) are required." });
     }
     try {
-        const data = await scrapeSubzoneSurveys(taluka, village, row, survey || undefined);
+        const data = await scrapeSubzoneSurveys(taluka, village, row, survey || undefined, page);
         res.json(data);
     } catch (err) {
         sendError(res, err, "Could not fetch survey numbers.");
@@ -60,11 +61,12 @@ app.get("/get-surveys", async (req, res) => {
 app.get("/get-rates", async (req, res) => {
     const taluka = String(req.query.taluka || "").trim();
     const village = String(req.query.village || "").trim();
+    const page = parseInt(req.query.page, 10) || 1;
     if (!taluka || !village) {
         return res.status(400).json({ detail: "taluka and village are required." });
     }
     try {
-        const data = await scrapeRates(taluka, village);
+        const data = await scrapeRates(taluka, village, page);
         res.json(data);
     } catch (err) {
         sendError(res, err, "Could not fetch rates.");
