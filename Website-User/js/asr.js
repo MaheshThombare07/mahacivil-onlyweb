@@ -759,6 +759,20 @@
         setTimeout(() => input.classList.remove("calc-rate-filled"), 1500);
     }
 
+    function calcSetEasrPlaceholderVisible(show) {
+        const placeholder = document.querySelector("#calc-easr-placeholder");
+        if (placeholder) placeholder.classList.toggle("hidden", !show);
+    }
+
+    function calcClearEasrResults() {
+        const container = document.querySelector("#calc-asr-results");
+        if (container) {
+            container.innerHTML = "";
+            container.classList.add("hidden");
+        }
+        calcSetEasrPlaceholderVisible(true);
+    }
+
     function renderCalcResults(data, lang) {
         const container = document.querySelector("#calc-asr-results");
         if (!container) return;
@@ -766,10 +780,15 @@
 
         const rows = flattenEntries(data);
         if (!rows.length) {
+            calcClearEasrResults();
             container.innerHTML = `<div class="calc-asr-inner"><p class="muted" style="padding:12px 14px">${t("asrNoData", lang)}</p></div>`;
             container.classList.remove("hidden");
+            calcSetEasrPlaceholderVisible(false);
             return;
         }
+
+        calcSetEasrPlaceholderVisible(false);
+        container.classList.remove("hidden");
 
         const cols = detectColumns(rows);
 
@@ -895,8 +914,7 @@
 
         calcSetStatus(t("asrLoading", lang), false);
         if (btn) btn.disabled = true;
-        const container = document.querySelector("#calc-asr-results");
-        if (container) container.classList.add("hidden");
+        calcClearEasrResults();
 
         try {
             const surveyParam = searchMode === "survey" ? `&surveyNo=${encodeURIComponent(surveyNo)}` : "";
@@ -966,7 +984,7 @@
         document.querySelectorAll('input[name="calc-asr-search-mode"]').forEach((radio) => {
             radio.addEventListener("change", () => {
                 updateCalcSearchModeUI();
-                if (container) container.classList.add("hidden");
+                calcClearEasrResults();
                 calcSetStatus("", false);
             });
         });
@@ -979,13 +997,13 @@
         });
 
         talukaSelect.addEventListener("change", (e) => {
-            if (container) container.classList.add("hidden");
+            calcClearEasrResults();
             calcSetStatus("", false);
             loadCalcVillages(e.target.value);
         });
 
         villageSelect?.addEventListener("change", () => {
-            if (container) container.classList.add("hidden");
+            calcClearEasrResults();
             calcSetStatus("", false);
         });
 

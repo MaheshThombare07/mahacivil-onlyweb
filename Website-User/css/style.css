@@ -551,13 +551,22 @@ img, svg {
 }
 
 /* ── Calculator ── */
-#calculator > .container > .calc-tabs {
-    margin-left: auto;
-    margin-right: auto;
+.calc-top-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
 }
 
-#calculator > .container > .authority-selector {
+#calculator > .container > .calc-top-controls .calc-tabs {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#calculator > .container > .calc-top-controls .authority-selector {
     justify-content: center;
+    margin: 0;
 }
 
 .calc-tabs {
@@ -568,7 +577,6 @@ img, svg {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 4px;
-    margin-bottom: 32px;
     box-shadow: var(--shadow-sm);
 }
 
@@ -637,8 +645,58 @@ img, svg {
 .calc-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 28px;
+    gap: 24px;
     align-items: start;
+}
+
+.calc-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.calc-panel {
+    min-width: 0;
+}
+
+.calc-result-panel,
+.calc-easr-output-panel {
+    flex: 1;
+}
+
+.calc-easr-output-panel {
+    padding: 0;
+    overflow: hidden;
+}
+
+.calc-easr-output-panel.card {
+    padding: 0;
+}
+
+.calc-easr-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    padding: 32px 24px;
+    background: var(--maha-bg);
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--border);
+    margin: 0;
+}
+
+.calc-easr-output-panel:has(#calc-asr-results:not(.hidden)) .calc-easr-placeholder {
+    display: none;
+}
+
+.calc-easr-output-panel #calc-asr-results:not(.hidden) {
+    margin: 0;
+    border: none;
+    border-radius: var(--radius-lg);
 }
 
 /* ── Calculator-embedded eASR Lookup ──────────────────────────────── */
@@ -711,9 +769,8 @@ img, svg {
 
 /* Compact inline rate results */
 .calc-asr-results {
-    margin-top: 14px;
-    border: 1px solid #d0c4e8;
-    border-radius: var(--radius);
+    border: none;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     background: #faf7ff;
 }
@@ -1086,23 +1143,23 @@ img, svg {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 300px;
+    min-height: 280px;
     text-align: center;
     color: var(--text-muted);
     font-size: 0.95rem;
     padding: 32px 24px;
     background: var(--maha-bg);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     border: 2px dashed var(--border);
 }
 
-.calc-result {
+.calc-result-panel {
     min-width: 0;
     overflow: visible;
 }
 
-.calc-result .receipt:not(.hidden) ~ .result-placeholder,
-.calc-result:has(.receipt:not(.hidden)) .result-placeholder {
+.calc-result-panel .receipt:not(.hidden) ~ .result-placeholder,
+.calc-result-panel:has(.receipt:not(.hidden)) .result-placeholder {
     display: none;
 }
 
@@ -2743,7 +2800,9 @@ img, svg {
     }
 
     .calc-form,
-    .calc-result,
+    .calc-panel,
+    .calc-result-panel,
+    .calc-easr-output-panel,
     .asr-layout,
     .asr-form-card,
     .asr-results-panel {

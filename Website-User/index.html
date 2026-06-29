@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=17">
+    <link rel="stylesheet" href="css/style.css?v=18">
 </head>
 <body>
     <!-- Full-screen map modal -->
@@ -109,25 +109,107 @@
                     <p data-i18n="calcSectionDesc">Enter plot details below to compute charges instantly.</p>
                 </div>
 
-                <div class="calc-tabs">
-                    <button type="button" class="calc-tab active" data-calc="open-plot" data-i18n="openPlotShort">Open Plot</button>
-                    <button type="button" class="calc-tab" data-calc="built-up" data-i18n="builtUpShort">Built Up</button>
-                </div>
-
-                <!-- Authority selector — shown only for Open Plot -->
-                <div class="authority-selector" id="authority-selector">
-                    <span class="authority-label" data-i18n="authorityLabel">Authority:</span>
-                    <button type="button" class="authority-btn" data-authority="csmrd">CSMRD</button>
-                    <button type="button" class="authority-btn active" data-authority="municipal" data-i18n="authorityMunicipal">Municipal</button>
+                <div class="calc-top-controls">
+                    <div class="authority-selector" id="authority-selector">
+                        <span class="authority-label" data-i18n="authorityLabel">Authority:</span>
+                        <button type="button" class="authority-btn" data-authority="csmrd">CSMRD</button>
+                        <button type="button" class="authority-btn active" data-authority="municipal" data-i18n="authorityMunicipal">Municipal</button>
+                    </div>
+                    <div class="calc-tabs">
+                        <button type="button" class="calc-tab active" data-calc="open-plot" data-i18n="openPlotShort">Open Plot</button>
+                        <button type="button" class="calc-tab" data-calc="built-up" data-i18n="builtUpShort">Built Up</button>
+                    </div>
                 </div>
 
                 <div class="calc-layout">
-                    <div class="calc-form card">
-
-                        <!-- Step 1: eASR Rate Lookup -->
-                        <div class="calc-step-block">
+                    <!-- Left: Calculator inputs + receipt -->
+                    <div class="calc-column calc-column-left">
+                        <div class="calc-panel card calc-details-panel">
                             <div class="calc-step-header">
                                 <span class="calc-step-badge">1</span>
+                                <span data-i18n="calcAsrStep2">Enter Details &amp; Calculate</span>
+                            </div>
+
+                            <div class="converter-box">
+                                <h3 data-i18n="convertSqFt">Convert Sq.ft to Sq.m:</h3>
+                                <div class="form-row">
+                                    <input type="text" class="form-input" id="plot-sqft" inputmode="decimal" placeholder="e.g. 600" autocomplete="off">
+                                    <div class="stepper-group">
+                                        <button type="button" class="step-btn step-up" data-target="plot-sqft" data-step="10">+</button>
+                                        <button type="button" class="step-btn step-down" data-target="plot-sqft" data-step="10">−</button>
+                                    </div>
+                                </div>
+                                <p class="converter-result"><span data-i18n="result">Result:</span> <strong id="sqft-result">--</strong></p>
+                                <p class="field-error hidden" id="err-plot-sqft"></p>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="plot-sqm" data-i18n="plotAreaSqM">Plot Area (Sq.m)</label>
+                                    <div class="form-row">
+                                        <input type="text" class="form-input" id="plot-sqm" inputmode="decimal" placeholder="Enter area" autocomplete="off">
+                                        <div class="stepper-group">
+                                            <button type="button" class="step-btn step-up" data-target="plot-sqm" data-step="0.01">+</button>
+                                            <button type="button" class="step-btn step-down" data-target="plot-sqm" data-step="0.01">−</button>
+                                        </div>
+                                    </div>
+                                    <p class="field-error hidden" id="err-plot-sqm"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="asr-rate" data-i18n="asrRate">eASR Rate
+                                        <span class="rate-hint-tag" id="calc-selected-rate-badge"></span>
+                                    </label>
+                                    <div class="form-row">
+                                        <input type="text" class="form-input" id="asr-rate" inputmode="decimal" placeholder="Enter rate" autocomplete="off">
+                                        <div class="stepper-group">
+                                            <button type="button" class="step-btn step-up" data-target="asr-rate" data-step="100">+</button>
+                                            <button type="button" class="step-btn step-down" data-target="asr-rate" data-step="100">−</button>
+                                        </div>
+                                    </div>
+                                    <p class="field-error hidden" id="err-asr-rate"></p>
+                                    <p class="calc-rate-hint muted" data-i18n="calcAsrHint">Click a rate from eASR results to auto-fill, or enter manually.</p>
+                                </div>
+                            </div>
+
+                            <div id="built-up-fields" class="built-up-fields hidden">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="bu-res" data-i18n="builtUpRes">Built-up Area Residential</label>
+                                        <input type="text" class="form-input" id="bu-res" inputmode="decimal" placeholder="0" autocomplete="off">
+                                        <p class="field-error hidden" id="err-bu-res"></p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="bu-comm" data-i18n="builtUpComm">Built-up Area Commercial</label>
+                                        <input type="text" class="form-input" id="bu-comm" inputmode="decimal" placeholder="0" autocomplete="off">
+                                        <p class="field-error hidden" id="err-bu-comm"></p>
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <label for="bu-margins" data-i18n="builtUpMargins">Built-up in Margins</label>
+                                        <input type="text" class="form-input" id="bu-margins" inputmode="decimal" placeholder="0" autocomplete="off">
+                                        <p class="field-error hidden" id="err-bu-margins"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" id="btn-calculate" class="btn btn-primary" data-i18n="calculate">Calculate</button>
+                                <button type="button" id="btn-pdf" class="btn btn-secondary" data-i18n="generatePdf" disabled>Generate PDF</button>
+                            </div>
+                        </div>
+
+                        <div class="calc-panel card calc-result-panel" id="receipt-section">
+                            <div class="result-placeholder" id="result-placeholder">
+                                <p data-i18n="resultPlaceholder">Fill in the fields and click Calculate to see your receipt here.</p>
+                            </div>
+                            <div id="receipt" class="receipt hidden"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right: eASR lookup + results -->
+                    <div class="calc-column calc-column-right">
+                        <div class="calc-panel card calc-easr-panel">
+                            <div class="calc-step-header">
+                                <span class="calc-step-badge">2</span>
                                 <span data-i18n="calcAsrStep1">Lookup eASR Rate</span>
                             </div>
                             <div class="calc-district-badge">
@@ -168,89 +250,14 @@
                                 <button type="button" id="calc-asr-fetch-btn" class="btn btn-primary" data-i18n="asrFetch">Fetch Rates</button>
                             </div>
                             <p id="calc-asr-status" class="asr-status muted" aria-live="polite"></p>
+                        </div>
+
+                        <div class="calc-panel card calc-easr-output-panel">
+                            <div class="calc-easr-placeholder" id="calc-easr-placeholder">
+                                <p data-i18n="calcEasrPlaceholder">Fetch rates to see eASR results here.</p>
+                            </div>
                             <div id="calc-asr-results" class="calc-asr-results hidden"></div>
                         </div>
-
-                        <div class="calc-step-divider"></div>
-
-                        <!-- Step 2: Calculate -->
-                        <div class="calc-step-header calc-step-header-2">
-                            <span class="calc-step-badge">2</span>
-                            <span data-i18n="calcAsrStep2">Enter Details &amp; Calculate</span>
-                        </div>
-
-                        <div class="converter-box">
-                            <h3 data-i18n="convertSqFt">Convert Sq.ft to Sq.m:</h3>
-                            <div class="form-row">
-                                <input type="text" class="form-input" id="plot-sqft" inputmode="decimal" placeholder="e.g. 600" autocomplete="off">
-                                <div class="stepper-group">
-                                    <button type="button" class="step-btn step-up" data-target="plot-sqft" data-step="10">+</button>
-                                    <button type="button" class="step-btn step-down" data-target="plot-sqft" data-step="10">−</button>
-                                </div>
-                            </div>
-                            <p class="converter-result"><span data-i18n="result">Result:</span> <strong id="sqft-result">--</strong></p>
-                            <p class="field-error hidden" id="err-plot-sqft"></p>
-                        </div>
-
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="plot-sqm" data-i18n="plotAreaSqM">Plot Area (Sq.m)</label>
-                                <div class="form-row">
-                                    <input type="text" class="form-input" id="plot-sqm" inputmode="decimal" placeholder="Enter area" autocomplete="off">
-                                    <div class="stepper-group">
-                                        <button type="button" class="step-btn step-up" data-target="plot-sqm" data-step="0.01">+</button>
-                                        <button type="button" class="step-btn step-down" data-target="plot-sqm" data-step="0.01">−</button>
-                                    </div>
-                                </div>
-                                <p class="field-error hidden" id="err-plot-sqm"></p>
-                            </div>
-                            <div class="form-group">
-                                <label for="asr-rate" data-i18n="asrRate">eASR Rate
-                                    <span class="rate-hint-tag" id="calc-selected-rate-badge"></span>
-                                </label>
-                                <div class="form-row">
-                                    <input type="text" class="form-input" id="asr-rate" inputmode="decimal" placeholder="Enter rate" autocomplete="off">
-                                    <div class="stepper-group">
-                                        <button type="button" class="step-btn step-up" data-target="asr-rate" data-step="100">+</button>
-                                        <button type="button" class="step-btn step-down" data-target="asr-rate" data-step="100">−</button>
-                                    </div>
-                                </div>
-                                <p class="field-error hidden" id="err-asr-rate"></p>
-                                <p class="calc-rate-hint muted" data-i18n="calcAsrHint">Click a rate above to auto-fill, or enter manually.</p>
-                            </div>
-                        </div>
-
-                        <div id="built-up-fields" class="built-up-fields hidden">
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="bu-res" data-i18n="builtUpRes">Built-up Area Residential</label>
-                                    <input type="text" class="form-input" id="bu-res" inputmode="decimal" placeholder="0" autocomplete="off">
-                                    <p class="field-error hidden" id="err-bu-res"></p>
-                                </div>
-                                <div class="form-group">
-                                    <label for="bu-comm" data-i18n="builtUpComm">Built-up Area Commercial</label>
-                                    <input type="text" class="form-input" id="bu-comm" inputmode="decimal" placeholder="0" autocomplete="off">
-                                    <p class="field-error hidden" id="err-bu-comm"></p>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label for="bu-margins" data-i18n="builtUpMargins">Built-up in Margins</label>
-                                    <input type="text" class="form-input" id="bu-margins" inputmode="decimal" placeholder="0" autocomplete="off">
-                                    <p class="field-error hidden" id="err-bu-margins"></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="button" id="btn-calculate" class="btn btn-primary" data-i18n="calculate">Calculate</button>
-                            <button type="button" id="btn-pdf" class="btn btn-secondary" data-i18n="generatePdf" disabled>Generate PDF</button>
-                        </div>
-                    </div>
-
-                    <div class="calc-result card" id="receipt-section">
-                        <div class="result-placeholder" id="result-placeholder">
-                            <p data-i18n="resultPlaceholder">Fill in the fields and click Calculate to see your receipt here.</p>
-                        </div>
-                        <div id="receipt" class="receipt hidden"></div>
                     </div>
                 </div>
             </div>
@@ -604,10 +611,10 @@
 
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
-    <script src="js/i18n.js?v=7"></script>
+    <script src="js/i18n.js?v=8"></script>
     <script src="js/calculator.js?v=4"></script>
     <script src="js/pdf.js?v=4"></script>
-    <script src="js/asr.js?v=12"></script>
+    <script src="js/asr.js?v=13"></script>
     <script src="js/auth.js?v=5"></script>
     <script src="js/app.js?v=4"></script>
 </body>
