@@ -2111,6 +2111,13 @@ img, svg {
     word-break: normal;
 }
 
+.ct-map-hint {
+    margin: 10px 0 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--maha-orange);
+}
+
 /* ── Footer ── */
 .site-footer {
     background: var(--maha-blue);
@@ -2191,6 +2198,74 @@ img, svg {
 
 .ft-contact a:hover {
     color: var(--maha-orange-light);
+}
+
+.ft-location {
+    padding: 0 0 28px;
+}
+
+.ft-location-link {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: background var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.ft-location-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+    transform: translateY(-1px);
+}
+
+.ft-location-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 152, 0, 0.15);
+    color: var(--maha-orange-light);
+    flex-shrink: 0;
+}
+
+.ft-location-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ft-location-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--maha-orange-light);
+}
+
+.ft-location-name {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.35;
+}
+
+.ft-location-action {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: 2px;
+}
+
+.ft-location-link:hover .ft-location-action {
+    color: var(--white);
 }
 
 .ft-bottom {
