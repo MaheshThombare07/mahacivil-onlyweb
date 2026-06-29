@@ -25,6 +25,9 @@
         if (typeof window.MahaAuth !== "undefined" && typeof window.MahaAuth.refreshAuthI18n === "function") {
             window.MahaAuth.refreshAuthI18n();
         }
+        if (document.body.dataset.page) {
+            document.title = getPageTitle(document.body.dataset.page);
+        }
     }
 
     function showError(id, msg) {
@@ -70,6 +73,65 @@
         }
     }
 
+    const PAGE_TO_VIEW = {
+        home: "view-home",
+        calculator: "view-home",
+        services: "view-home",
+        about: "view-home",
+        contact: "view-home",
+        "asr-rates": "view-easr",
+        "dp-maps": "view-dp",
+    };
+
+    const HOME_SCROLL_SECTIONS = new Set(["calculator", "services", "about", "contact"]);
+
+    function resolvePageKey(pageOrHash) {
+        const key = String(pageOrHash || "home").replace(/^#/, "").trim();
+        return PAGE_TO_VIEW[key] ? key : "home";
+    }
+
+    function getPageTitle(pageKey) {
+        const suffix = " | MahaCivil";
+        const titles = {
+            home: "MahaCivil | Chhatrapati Sambhajinagar",
+            calculator: t("navCalculator", lang) + suffix,
+            "asr-rates": t("navAsr", lang) + suffix,
+            "dp-maps": t("navDp", lang) + suffix,
+            services: t("navServices", lang) + suffix,
+            about: t("navAbout", lang) + suffix,
+            contact: t("navContact", lang) + suffix,
+        };
+        return titles[pageKey] || titles.home;
+    }
+
+    function showPage(pageKey) {
+        const key = resolvePageKey(pageKey);
+        const viewId = PAGE_TO_VIEW[key];
+        $$(".site-view").forEach((view) => {
+            view.classList.toggle("active", view.id === viewId);
+        });
+        $$(".nav-link").forEach((link) => {
+            link.classList.toggle("active", link.dataset.page === key);
+        });
+        document.body.dataset.page = key;
+        const hash = key === "home" ? "#home" : "#" + key;
+        if (history.replaceState) {
+            history.replaceState(null, "", hash);
+        } else {
+            location.hash = hash;
+        }
+        document.title = getPageTitle(key);
+
+        if (HOME_SCROLL_SECTIONS.has(key)) {
+            requestAnimationFrame(() => {
+                const el = document.getElementById(key);
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        } else {
+            window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+        }
+    }
+
     function initNavigation() {
         const nav = $("#site-nav");
         const menuBtn = $("#mobile-menu-btn");
@@ -86,15 +148,9 @@
             }
         }
 
-        function scrollToSection(sectionId) {
-            const el = document.getElementById(sectionId);
-            if (!el) return;
-            el.scrollIntoView({ behavior: "smooth", block: "start" });
-            if (history.replaceState) {
-                history.replaceState(null, "", "#" + sectionId);
-            } else {
-                location.hash = sectionId;
-            }
+        function navigateTo(pageKey) {
+            setMobileNavOpen(false);
+            showPage(pageKey);
         }
 
         if (menuBtn) {
@@ -109,28 +165,12 @@
             backdrop.addEventListener("click", () => setMobileNavOpen(false));
         }
 
-        $$(".nav-link, .site-logo[href^='#']").forEach((link) => {
+        $$(".nav-link, .site-logo[data-page], a[data-page]").forEach((link) => {
             link.addEventListener("click", (e) => {
-                const href = link.getAttribute("href") || "";
-                const sectionId = link.dataset.section || (href.startsWith("#") ? href.slice(1) : "");
-                if (!sectionId) return;
+                const pageKey = link.dataset.page || (link.getAttribute("href") || "").replace(/^#/, "");
+                if (!pageKey || !PAGE_TO_VIEW[pageKey]) return;
                 e.preventDefault();
-                setMobileNavOpen(false);
-                requestAnimationFrame(() => {
-                    scrollToSection(sectionId);
-                });
-            });
-        });
-
-        document.addEventListener("click", (e) => {
-            const link = e.target.closest("a[href^='#']");
-            if (!link || link.classList.contains("nav-link") || link.classList.contains("site-logo")) return;
-            const sectionId = (link.getAttribute("href") || "").slice(1);
-            if (!sectionId || !document.getElementById(sectionId)) return;
-            e.preventDefault();
-            setMobileNavOpen(false);
-            requestAnimationFrame(() => {
-                scrollToSection(sectionId);
+                navigateTo(pageKey);
             });
         });
 
@@ -140,25 +180,11 @@
             }
         });
 
-        const sections = ["home", "calculator", "asr-rates", "dp-maps", "services", "about", "contact"];
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        const id = entry.target.id;
-                        $$(".nav-link").forEach((link) => {
-                            link.classList.toggle("active", link.dataset.section === id);
-                        });
-                    }
-                });
-            },
-            { rootMargin: "-40% 0px -50% 0px", threshold: 0 }
-        );
-
-        sections.forEach((id) => {
-            const el = document.getElementById(id);
-            if (el) observer.observe(el);
+        window.addEventListener("hashchange", () => {
+            showPage(location.hash);
         });
+
+        showPage(location.hash || "home");
     }
 
     function initLanguage() {

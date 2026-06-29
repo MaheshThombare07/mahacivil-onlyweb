@@ -121,8 +121,17 @@ img, svg {
 .site-nav {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 2px;
     flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.site-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .nav-link {
@@ -296,24 +305,17 @@ img, svg {
     }
 
     .site-nav {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        height: var(--header-height);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        flex: none;
-        pointer-events: none;
-        z-index: 201;
-        width: auto;
-        max-width: calc(100% - 420px);
+        position: static;
+        transform: none;
+        height: auto;
+        pointer-events: auto;
+        max-width: none;
+        padding: 0 8px;
     }
 
-    .site-nav .nav-link {
-        pointer-events: auto;
+    .nav-link {
+        padding: 8px 10px;
+        font-size: 0.8125rem;
     }
 }
 
@@ -550,6 +552,31 @@ img, svg {
     box-shadow: var(--shadow-hover);
 }
 
+/* ── Site pages (SPA views) ── */
+.site-view {
+    display: none;
+}
+
+.site-view.active {
+    display: block;
+}
+
+.page-section {
+    min-height: calc(100vh - 180px);
+    padding-top: 48px;
+    padding-bottom: 64px;
+}
+
+#view-home .hero.section {
+    min-height: auto;
+}
+
+#view-home.page-section,
+#view-home .page-section {
+    min-height: auto;
+    padding-top: 0;
+}
+
 /* ── Calculator ── */
 .calc-top-controls {
     display: flex;
@@ -657,7 +684,8 @@ img, svg {
 }
 
 @media (min-width: 901px) {
-    .calc-layout {
+    .calc-layout,
+    .calc-layout-simple {
         grid-template-columns: 1fr 1fr;
         gap: 24px;
     }
@@ -2037,6 +2065,70 @@ img, svg {
     line-height: 1.65;
 }
 
+/* ── Map embed preview ── */
+.map-embed-wrap {
+    position: relative;
+    width: 100%;
+    height: 240px;
+    overflow: hidden;
+    background: #e8ecef;
+}
+
+.map-embed-iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    pointer-events: none;
+}
+
+.map-embed-caption {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--maha-teal-bg);
+    border-top: 1px solid var(--border-light);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--maha-blue);
+}
+
+.map-embed-pin {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.ct-map-preview {
+    display: block;
+    margin-bottom: 24px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: inherit;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.ct-map-preview:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--maha-teal);
+}
+
+.ct-map-preview .map-embed-wrap {
+    border-radius: 0;
+}
+
+.ct-map-preview:hover .map-embed-caption {
+    background: var(--maha-blue);
+    color: var(--white);
+    border-top-color: transparent;
+}
+
 /* ── Contact ── */
 .ct-wrap {
     display: grid;
@@ -2210,23 +2302,32 @@ img, svg {
     padding: 0 0 28px;
 }
 
-.ft-location-link {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 18px 20px;
+.ft-location-card {
+    display: block;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: var(--radius-lg);
     text-decoration: none;
     color: inherit;
     transition: background var(--transition), border-color var(--transition), transform var(--transition);
 }
 
-.ft-location-link:hover {
+.ft-location-card:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.22);
     transform: translateY(-1px);
+}
+
+.ft-map-embed-wrap {
+    height: 200px;
+}
+
+.ft-location-body {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
 }
 
 .ft-location-icon {
@@ -2270,7 +2371,7 @@ img, svg {
     margin-top: 2px;
 }
 
-.ft-location-link:hover .ft-location-action {
+.ft-location-card:hover .ft-location-action {
     color: var(--white);
 }
 
