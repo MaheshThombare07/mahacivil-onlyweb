@@ -73,19 +73,38 @@
     function initNavigation() {
         const nav = $("#site-nav");
         const menuBtn = $("#mobile-menu-btn");
+        const backdrop = $("#mobile-nav-backdrop");
+
+        function setMobileNavOpen(isOpen) {
+            if (!nav) return;
+            nav.classList.toggle("open", isOpen);
+            document.body.classList.toggle("nav-open", isOpen);
+            if (menuBtn) menuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            if (backdrop) {
+                backdrop.classList.toggle("hidden", !isOpen);
+                backdrop.setAttribute("aria-hidden", isOpen ? "false" : "true");
+            }
+        }
 
         if (menuBtn) {
-            menuBtn.addEventListener("click", () => {
-                const isOpen = nav.classList.toggle("open");
-                document.body.classList.toggle("nav-open", isOpen);
+            menuBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                setMobileNavOpen(!nav.classList.contains("open"));
             });
         }
 
+        if (backdrop) {
+            backdrop.addEventListener("click", () => setMobileNavOpen(false));
+        }
+
         $$(".nav-link").forEach((link) => {
-            link.addEventListener("click", () => {
-                nav.classList.remove("open");
-                document.body.classList.remove("nav-open");
-            });
+            link.addEventListener("click", () => setMobileNavOpen(false));
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && nav && nav.classList.contains("open")) {
+                setMobileNavOpen(false);
+            }
         });
 
         const sections = ["home", "calculator", "asr-rates", "dp-maps", "services", "about", "contact"];
