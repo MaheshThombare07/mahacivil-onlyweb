@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=12">
+    <link rel="stylesheet" href="css/style.css?v=13">
 </head>
 <body>
     <!-- Full-screen map modal -->
@@ -61,6 +61,7 @@
             <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle menu" aria-expanded="false" aria-controls="site-nav">☰</button>
         </div>
     </header>
+    <div class="mobile-nav-backdrop hidden" id="mobile-nav-backdrop" aria-hidden="true"></div>
     <nav class="site-nav" id="site-nav" aria-label="Main navigation">
         <a href="#home" class="nav-link active" data-section="home" data-i18n="navHome">Home</a>
         <a href="#calculator" class="nav-link" data-section="calculator" data-i18n="navCalculator">Calculator</a>
@@ -71,8 +72,6 @@
         <a href="#contact" class="nav-link" data-section="contact" data-i18n="navContact">Contact</a>
     </nav>
     </div>
-
-    <div class="mobile-nav-backdrop hidden" id="mobile-nav-backdrop" aria-hidden="true"></div>
 
     <main>
         <!-- Hero -->

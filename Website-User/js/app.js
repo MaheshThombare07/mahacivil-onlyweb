@@ -86,9 +86,21 @@
             }
         }
 
+        function scrollToSection(sectionId) {
+            const el = document.getElementById(sectionId);
+            if (!el) return;
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+            if (history.replaceState) {
+                history.replaceState(null, "", "#" + sectionId);
+            } else {
+                location.hash = sectionId;
+            }
+        }
+
         if (menuBtn) {
             menuBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
+                if (!nav) return;
                 setMobileNavOpen(!nav.classList.contains("open"));
             });
         }
@@ -97,8 +109,29 @@
             backdrop.addEventListener("click", () => setMobileNavOpen(false));
         }
 
-        $$(".nav-link").forEach((link) => {
-            link.addEventListener("click", () => setMobileNavOpen(false));
+        $$(".nav-link, .site-logo[href^='#']").forEach((link) => {
+            link.addEventListener("click", (e) => {
+                const href = link.getAttribute("href") || "";
+                const sectionId = link.dataset.section || (href.startsWith("#") ? href.slice(1) : "");
+                if (!sectionId) return;
+                e.preventDefault();
+                setMobileNavOpen(false);
+                requestAnimationFrame(() => {
+                    scrollToSection(sectionId);
+                });
+            });
+        });
+
+        document.addEventListener("click", (e) => {
+            const link = e.target.closest("a[href^='#']");
+            if (!link || link.classList.contains("nav-link") || link.classList.contains("site-logo")) return;
+            const sectionId = (link.getAttribute("href") || "").slice(1);
+            if (!sectionId || !document.getElementById(sectionId)) return;
+            e.preventDefault();
+            setMobileNavOpen(false);
+            requestAnimationFrame(() => {
+                scrollToSection(sectionId);
+            });
         });
 
         document.addEventListener("keydown", (e) => {

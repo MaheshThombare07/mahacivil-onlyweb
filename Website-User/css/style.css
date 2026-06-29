@@ -291,6 +291,10 @@ img, svg {
 }
 
 @media (min-width: 769px) {
+    .mobile-nav-backdrop {
+        display: none !important;
+    }
+
     .site-nav {
         position: absolute;
         top: 0;
