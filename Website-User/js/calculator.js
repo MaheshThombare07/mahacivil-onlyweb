@@ -35,12 +35,12 @@ function formatDateTime() {
     });
 }
 
-// authority: "csmrd" (10%) | "municipal" (100%)
+// authority: "cmrda" (10%) | "csmc" (100%)
 function calculateOpenPlot(plotAreaSqM, asrRate, authority) {
-    const auth = authority === "csmrd" ? "csmrd" : "municipal";
+    const auth = authority === "cmrda" ? "cmrda" : "csmc";
     const bettermentRate = CONSTANTS.BETTERMENT_FIXED_RATE;   // 1836 Rs/sq.m fixed
-    const bettermentPct  = auth === "csmrd" ? 0.10 : 1.0;
-    const bettermentLabel = auth === "csmrd" ? "10%" : "100%";
+    const bettermentPct  = auth === "cmrda" ? 0.10 : 1.0;
+    const bettermentLabel = auth === "cmrda" ? "10%" : "100%";
 
     const charges = [
         { serial: 1, name: "Scrutiny Fee",            rate: "4",                        pct: "NA",          amount: plotAreaSqM * 4 },

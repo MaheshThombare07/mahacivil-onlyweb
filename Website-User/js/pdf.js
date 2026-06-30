@@ -14,9 +14,9 @@ function buildReceiptHtml(result, lang) {
 
     let summaryHtml = "";
     if (isOpen) {
-        const authLabel = result.authority === "municipal"
-            ? (lang === "mr" ? "महानगरपालिका" : "Municipal")
-            : "CSMRD";
+        const authLabel = result.authority === "cmrda"
+            ? t("authorityCmrda", lang)
+            : t("authorityCsmc", lang);
         summaryHtml = `
             <div class="summary-row"><span>${t("plotArea", lang)}</span><span>${formatArea(result.plotAreaSqM)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("asrRate", lang)}</span><span>${formatRate(result.asrRate)}</span></div>

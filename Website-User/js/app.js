@@ -4,7 +4,7 @@
 (function () {
     let lang = "en";
     let calcType = "open-plot";
-    let calcAuthority = "municipal"; // "csmrd" | "municipal" (Open Plot only)
+    let calcAuthority = "csmc"; // "cmrda" (10%) | "csmc" (100%) — Open Plot only
     let lastResult = null;
 
     const $ = (sel) => document.querySelector(sel);
@@ -77,13 +77,14 @@
         home: "view-home",
         calculator: "view-home",
         services: "view-home",
+        downloads: "view-home",
         about: "view-home",
         contact: "view-home",
         "asr-rates": "view-easr",
         "dp-maps": "view-dp",
     };
 
-    const HOME_SCROLL_SECTIONS = new Set(["calculator", "services", "about", "contact"]);
+    const HOME_SCROLL_SECTIONS = new Set(["calculator", "services", "downloads", "about", "contact"]);
 
     function resolvePageKey(pageOrHash) {
         const key = String(pageOrHash || "home").replace(/^#/, "").trim();
@@ -98,6 +99,7 @@
             "asr-rates": t("navAsr", lang) + suffix,
             "dp-maps": t("navDp", lang) + suffix,
             services: t("navServices", lang) + suffix,
+            downloads: t("downloadsSectionTitle", lang) + suffix,
             about: t("navAbout", lang) + suffix,
             contact: t("navContact", lang) + suffix,
         };
