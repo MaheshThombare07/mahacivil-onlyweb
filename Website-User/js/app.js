@@ -93,7 +93,7 @@
     function getPageTitle(pageKey) {
         const suffix = " | MahaCivil";
         const titles = {
-            home: "MahaCivil | Chhatrapati Sambhajinagar",
+            home: t("homePageTitle", lang),
             calculator: t("navCalculator", lang) + suffix,
             "asr-rates": t("navAsr", lang) + suffix,
             "dp-maps": t("navDp", lang) + suffix,
