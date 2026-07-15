@@ -351,7 +351,10 @@
                 alert(t("calculateFirst", lang));
                 return;
             }
-            printReceipt(buildReceiptHtml(lastResult, lang));
+            openPrintWindow(
+                t(lastResult.type === "open-plot" ? "openPlotCharges" : "builtUpCharges", lang),
+                buildPrintReceiptHtml(lastResult, lang)
+            );
         });
     }
 

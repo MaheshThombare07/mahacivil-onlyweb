@@ -2928,29 +2928,35 @@ img, svg {
 }
 
 @media print {
-    body * {
-        visibility: hidden;
+    @page {
+        size: A4;
+        margin: 12mm;
     }
 
-    #print-area, #print-area * {
-        visibility: visible;
+    body.printing-receipt * {
+        visibility: hidden !important;
     }
 
-    #print-area {
-        display: block !important;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
+    body.printing-receipt #print-area,
+    body.printing-receipt #print-area * {
+        visibility: visible !important;
     }
 
-    .receipt-charges-mobile {
+    body.printing-receipt > *:not(#print-area) {
         display: none !important;
     }
 
-    .receipt-table-wrap,
-    .receipt-charges-desktop {
+    body.printing-receipt #print-area {
         display: block !important;
+        position: static !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.printing-receipt .print-receipt {
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
 }
 

@@ -1,10 +1,188 @@
 /**
- * Generate PDF via browser print dialog (pure HTML/CSS/JS)
+ * Generate PDF via browser print dialog (exact calculation data, single page)
  */
+function getPrintStyles() {
+    return `
+        @page { size: A4; margin: 12mm; }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #0f2f2c;
+            background: #fff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .print-receipt {
+            width: 100%;
+            max-width: 180mm;
+            margin: 0 auto;
+        }
+        .print-header {
+            background: #0f5c52;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 6px 6px 0 0;
+        }
+        .print-brand {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            opacity: 0.9;
+            color: #7edccf;
+        }
+        .print-header h1 {
+            margin: 4px 0 0;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+        .print-date {
+            margin-top: 4px;
+            font-size: 11px;
+            opacity: 0.9;
+        }
+        .print-body {
+            border: 1px solid #d5e3e0;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            padding: 12px 14px 14px;
+        }
+        .print-body h2 {
+            margin: 0 0 8px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #0f5c52;
+        }
+        .print-body h2 + h2,
+        .print-charges-title {
+            margin-top: 12px;
+        }
+        .summary-table,
+        .charges-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin: 0;
+        }
+        .summary-table td {
+            padding: 4px 0;
+            border-bottom: 1px solid #eef3f2;
+            vertical-align: top;
+        }
+        .summary-table td:first-child {
+            color: #5a736f;
+            width: 48%;
+        }
+        .summary-table td:last-child {
+            font-weight: 700;
+            text-align: right;
+            color: #0f2f2c;
+        }
+        .charges-table th,
+        .charges-table td {
+            border: 1px solid #d5e3e0;
+            padding: 6px 7px;
+            text-align: left;
+        }
+        .charges-table th {
+            background: #e8f5f2;
+            color: #0f5c52;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .charges-table td:last-child,
+        .charges-table th:last-child {
+            text-align: right;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+        .charges-table td:nth-child(1) {
+            width: 34px;
+            text-align: center;
+        }
+        .print-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: #0f5c52;
+            color: #fff;
+            border-radius: 6px;
+            font-weight: 800;
+        }
+        .print-total-label { font-size: 12px; }
+        .print-total-value { font-size: 15px; }
+        .print-footer {
+            margin-top: 8px;
+            font-size: 10px;
+            color: #6b8480;
+            text-align: center;
+        }
+        @media print {
+            html, body { height: auto !important; overflow: hidden !important; }
+            .print-receipt { page-break-inside: avoid; break-inside: avoid; }
+        }
+    `;
+}
+
+function openPrintWindow(title, bodyHtml) {
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${title}</title>
+    <style>${getPrintStyles()}</style>
+</head>
+<body>
+${bodyHtml}
+</body>
+</html>`;
+
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=820,height=900");
+    if (!printWindow) {
+        // Fallback if popup blocked: use on-page print area
+        const printArea = document.getElementById("print-area");
+        if (printArea) {
+            printArea.innerHTML = bodyHtml;
+            document.body.classList.add("printing-receipt");
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove("printing-receipt");
+                printArea.innerHTML = "";
+            }, 500);
+        }
+        return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    const triggerPrint = () => {
+        printWindow.focus();
+        printWindow.print();
+        setTimeout(() => {
+            try { printWindow.close(); } catch (_) { /* ignore */ }
+        }, 300);
+    };
+
+    if (printWindow.document.readyState === "complete") {
+        setTimeout(triggerPrint, 80);
+    } else {
+        printWindow.onload = () => setTimeout(triggerPrint, 80);
+    }
+}
+
 function printReceipt(receiptHtml) {
-    const printArea = document.getElementById("print-area");
-    printArea.innerHTML = receiptHtml;
-    window.print();
+    // Screen receipt HTML may include mobile cards; openPrintWindow is used for calculator PDF.
+    openPrintWindow("MahaCivil Receipt", receiptHtml);
 }
 
 function buildReceiptHtml(result, lang) {
@@ -96,6 +274,89 @@ function buildReceiptHtml(result, lang) {
     `;
 }
 
+/** Compact 1-page PDF of the exact calculated result (used by Generate PDF). */
+function buildPrintReceiptHtml(result, lang) {
+    const dt = formatDateTime();
+    const isOpen = result.type === "open-plot";
+    const title = isOpen ? t("openPlotCharges", lang) : t("builtUpCharges", lang);
+
+    let summaryRows = "";
+    if (isOpen) {
+        const authLabel = result.authority === "cmrda"
+            ? t("authorityCmrda", lang)
+            : t("authorityCsmc", lang);
+        summaryRows = `
+            <tr><td>${t("plotArea", lang)}</td><td>${formatArea(result.plotAreaSqM)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("asrRate", lang)}</td><td>${formatRate(result.asrRate)}</td></tr>
+            <tr><td>${t("authorityLabel", lang)}</td><td>${authLabel}</td></tr>
+        `;
+    } else {
+        const s = result.summary;
+        summaryRows = `
+            <tr><td>${t("plotArea", lang)}</td><td>${formatArea(s.plotAreaSqM)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("asrRate", lang)}</td><td>${formatRate(s.asrRate)}</td></tr>
+            <tr><td>${t("builtUpRes", lang)}</td><td>${formatArea(s.builtUpResidential)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("builtUpComm", lang)}</td><td>${formatArea(s.builtUpCommercial)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("builtUpMargins", lang)}</td><td>${formatArea(s.builtUpInMargins)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("maxBuiltUp", lang)}</td><td>${formatArea(s.maximumBuiltUpAllowed)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("ancillaryConsumed", lang)}</td><td>${formatArea(s.ancillaryAreaConsumed)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("regRes", lang)}</td><td>${formatArea(s.toBeRegularizedResidential)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("regComm", lang)}</td><td>${formatArea(s.toBeRegularizedCommercial)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("notReg", lang)}</td><td>${formatArea(s.notRegularizedArea)} ${t("sqM", lang)}</td></tr>
+        `;
+    }
+
+    const head = isOpen
+        ? `<tr><th>${t("srNo", lang)}</th><th>${t("charges", lang)}</th><th>${t("rate", lang)}</th><th>${t("percentage", lang)}</th><th>${t("amount", lang)}</th></tr>`
+        : `<tr><th>${t("charges", lang)}</th><th>${t("rate", lang)}</th><th>${t("percentage", lang)}</th><th>${t("amount", lang)}</th></tr>`;
+
+    const rows = result.charges.map((c) => {
+        const label = chargeLabel(c.name, lang);
+        const rate = c.rate === "As per Ancillary"
+            ? (lang === "mr" ? "अनुषंगिक नुसार" : "As per Ancillary")
+            : c.rate;
+        if (isOpen) {
+            return `<tr>
+                <td>${c.serial}</td>
+                <td>${label}</td>
+                <td>${rate}</td>
+                <td>${c.pct}</td>
+                <td>${formatCurrency(c.amount)}</td>
+            </tr>`;
+        }
+        return `<tr>
+            <td>${label}</td>
+            <td>${rate}</td>
+            <td>${c.pct || "-"}</td>
+            <td>${formatCurrency(c.amount)}</td>
+        </tr>`;
+    }).join("");
+
+    return `
+        <div class="print-receipt">
+            <div class="print-header">
+                <div class="print-brand">MahaCivil</div>
+                <h1>${title}</h1>
+                <div class="print-date">${t("dateTime", lang)}: ${dt}</div>
+            </div>
+            <div class="print-body">
+                <h2>${t("userInputSummary", lang)}</h2>
+                <table class="summary-table">${summaryRows}</table>
+                <h2 class="print-charges-title">${title}</h2>
+                <table class="charges-table">
+                    <thead>${head}</thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div class="print-total">
+                    <span class="print-total-label">${t("total", lang)}</span>
+                    <span class="print-total-value">${formatTotal(result.total)}</span>
+                </div>
+                <div class="print-footer">MahaCivil · ${title}</div>
+            </div>
+        </div>
+    `;
+}
+
 function renderReceipt(result, lang) {
     return buildReceiptHtml(result, lang);
 }
@@ -126,63 +387,50 @@ function buildAsrPdfHtml(data, lang) {
 
     const tableRows = rows.map((row) => `
         <tr>
-            <td style="padding:8px;border:1px solid #ccc;">${row.assessmentType}</td>
-            <td style="padding:8px;border:1px solid #ccc;text-align:center;">${row.assessmentRange || "—"}</td>
-            <td style="padding:8px;border:1px solid #ccc;text-align:center;font-weight:700;">${Number(row.rate)}</td>
-            ${showUnit ? `<td style="padding:8px;border:1px solid #ccc;text-align:center;">${row.unit || "—"}</td>` : ""}
+            <td>${row.assessmentType}</td>
+            <td style="text-align:center;">${row.assessmentRange || "—"}</td>
+            <td style="text-align:center;font-weight:700;">${Number(row.rate)}</td>
+            ${showUnit ? `<td style="text-align:center;">${row.unit || "—"}</td>` : ""}
         </tr>
     `).join("");
 
-    const unitHeader = showUnit ? `<th style="padding:10px;border:1px solid #5e157f;">${t("asrUnit", lang)}</th>` : "";
+    const unitHeader = showUnit ? `<th>${t("asrUnit", lang)}</th>` : "";
 
     return `
-        <div style="font-family:sans-serif;max-width:800px;margin:0 auto;">
-            <div style="background:#6a1b9a;color:#fff;text-align:center;padding:14px;font-weight:700;font-size:18px;">
-                ${t("asrPortalTitle", lang)}
+        <div class="print-receipt">
+            <div class="print-header">
+                <div class="print-brand">MahaCivil</div>
+                <h1>${t("asrPortalTitle", lang)}</h1>
+                <div class="print-date">${t("dateTime", lang)}: ${dt}</div>
             </div>
-            <div style="padding:16px 20px;background:#f5f5f5;border:1px solid #ddd;border-top:none;">
-                <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr>
-                        <td style="padding:6px 0;color:#666;font-weight:600;">${t("asrSelectedDistrict", lang)}</td>
-                        <td style="padding:6px 0;font-weight:700;color:#002d5b;">${district}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:6px 0;color:#666;font-weight:600;">${t("asrTaluka", lang)}</td>
-                        <td style="padding:6px 0;font-weight:700;color:#002d5b;">${data.taluka}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:6px 0;color:#666;font-weight:600;">${t("asrVillage", lang)}</td>
-                        <td style="padding:6px 0;font-weight:700;color:#002d5b;">${data.village}</td>
-                    </tr>
-                    ${vibhagNo != null ? `
-                    <tr>
-                        <td style="padding:6px 0;color:#666;font-weight:600;">${t("asrVibhagNumber", lang)}</td>
-                        <td style="padding:6px 0;font-weight:800;font-size:16px;color:#002d5b;">${vibhagNo}</td>
-                    </tr>` : ""}
-                    <tr>
-                        <td style="padding:6px 0;color:#666;font-weight:600;">${t("dateTime", lang)}</td>
-                        <td style="padding:6px 0;">${dt}</td>
-                    </tr>
+            <div class="print-body">
+                <h2>${t("userInputSummary", lang)}</h2>
+                <table class="summary-table">
+                    <tr><td>${t("asrSelectedDistrict", lang)}</td><td>${district}</td></tr>
+                    <tr><td>${t("asrTaluka", lang)}</td><td>${data.taluka}</td></tr>
+                    <tr><td>${t("asrVillage", lang)}</td><td>${data.village}</td></tr>
+                    ${vibhagNo != null ? `<tr><td>${t("asrVibhagNumber", lang)}</td><td>${vibhagNo}</td></tr>` : ""}
                 </table>
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:0;">
-                <thead>
-                    <tr style="background:#6a1b9a;color:#fff;">
-                        <th style="padding:10px;border:1px solid #5e157f;text-align:left;">${t("asrAssessmentType", lang)}</th>
-                        <th style="padding:10px;border:1px solid #5e157f;">${t("asrRange", lang)}</th>
-                        <th style="padding:10px;border:1px solid #5e157f;">${t("asrRateCol", lang)}</th>
-                        ${unitHeader}
-                    </tr>
-                </thead>
-                <tbody>${tableRows}</tbody>
-            </table>
-            <div style="margin-top:12px;padding:10px 16px;font-size:11px;color:#666;border-top:1px solid #ddd;">
-                <strong>MahaCivil</strong> · ${t("asrAllPagesNote", lang)} · ${rows.length} ${t("asrRowCount", lang)}
+                <h2 class="print-charges-title">${t("asrPortalTitle", lang)}</h2>
+                <table class="charges-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;">${t("asrAssessmentType", lang)}</th>
+                            <th>${t("asrRange", lang)}</th>
+                            <th>${t("asrRateCol", lang)}</th>
+                            ${unitHeader}
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+                <div class="print-footer">
+                    <strong>MahaCivil</strong> · ${rows.length} ${t("asrRowCount", lang)}
+                </div>
             </div>
         </div>
     `;
 }
 
 function printAsrRates(data, lang) {
-    printReceipt(buildAsrPdfHtml(data, lang));
+    openPrintWindow(t("asrPortalTitle", lang), buildAsrPdfHtml(data, lang));
 }
