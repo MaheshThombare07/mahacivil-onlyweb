@@ -396,6 +396,58 @@
     function initFooter() {
         const yearEl = $("#year");
         if (yearEl) yearEl.textContent = new Date().getFullYear();
+        initVisitorCounter();
+    }
+
+    function formatVisitorCount(n) {
+        const num = Number(n) || 0;
+        try {
+            return num.toLocaleString(lang === "mr" ? "mr-IN" : "en-IN");
+        } catch (_) {
+            return String(num);
+        }
+    }
+
+    function initVisitorCounter() {
+        const countEl = $("#visitor-count");
+        if (!countEl || typeof firebase === "undefined") return;
+
+        try {
+            if (!firebase.apps.length && window.MahaAuth && typeof window.MahaAuth.init === "function") {
+                window.MahaAuth.init();
+            }
+            if (!firebase.apps.length) return;
+
+            const ref = firebase.database().ref("stats/visitCount");
+            const SESSION_FLAG = "mahacivil_visit_counted";
+
+            // Show live count (updates when others visit too)
+            ref.on("value", (snap) => {
+                const val = snap.val();
+                countEl.textContent = formatVisitorCount(val == null ? 0 : val);
+            });
+
+            // Count this browser session once
+            let alreadyCounted = false;
+            try {
+                alreadyCounted = sessionStorage.getItem(SESSION_FLAG) === "1";
+            } catch (_) { /* ignore */ }
+
+            if (!alreadyCounted) {
+                ref.transaction((current) => {
+                    const n = Number(current) || 0;
+                    return n + 1;
+                }).then((result) => {
+                    if (result.committed) {
+                        try { sessionStorage.setItem(SESSION_FLAG, "1"); } catch (_) { /* ignore */ }
+                    }
+                }).catch(() => {
+                    // Permission denied or offline — leave shown value as-is
+                });
+            }
+        } catch (_) {
+            // Keep placeholder if Firebase is unavailable
+        }
     }
 
     function openDevModal() {

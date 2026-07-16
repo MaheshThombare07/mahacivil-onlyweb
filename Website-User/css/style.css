@@ -2501,6 +2501,20 @@ img, svg {
     color: rgba(255, 255, 255, 0.45);
 }
 
+.ft-visitors {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.02em;
+}
+
+.ft-visitors #visitor-count {
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.55);
+    font-variant-numeric: tabular-nums;
+}
+
 .developed-by-btn {
     background: none;
     border: none;
