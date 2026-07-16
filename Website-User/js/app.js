@@ -336,12 +336,13 @@
             if (resErr || commErr || margErr) return;
         }
 
-        // Validate first, then require login before showing results
-        if (window.MahaAuth && typeof window.MahaAuth.requireAuth === "function") {
-            window.MahaAuth.requireAuth(executeCalculate);
-        } else {
-            executeCalculate();
-        }
+        // Login temporarily disabled — show results without auth
+        // if (window.MahaAuth && typeof window.MahaAuth.requireAuth === "function") {
+        //     window.MahaAuth.requireAuth(executeCalculate);
+        // } else {
+        //     executeCalculate();
+        // }
+        executeCalculate();
     }
 
     function initCalculate() {
