@@ -53,7 +53,8 @@ function calculateOpenPlot(plotAreaSqM, asrRate, authority) {
 
 function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins) {
     const maxBuiltUp = plotAreaSqM * CONSTANTS.MAX_BUILT_UP_FSI;
-    const ancillaryArea = Math.max(0, margins - plotAreaSqM);
+    // Built-up in Margins is the ancillary area itself (do not subtract plot area)
+    const ancillaryArea = Math.max(0, Number(margins) || 0);
     const summary = {
         plotAreaSqM, asrRate,
         builtUpResidential: res,
@@ -68,6 +69,7 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins) {
 
     const bettermentRate = asrRate * CONSTANTS.BETTERMENT_RATE_RATIO;
     const scrutinyArea = res + comm;
+    const ancillaryAmount = ancillaryArea * asrRate * 0.01;
 
     const charges = [
         { name: "Scrutiny Fee", rate: "4", pct: "NA", amount: scrutinyArea * 4 },
@@ -75,8 +77,8 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins) {
         { name: "Land Dev Charges (eASR)", rate: formatRate(asrRate), pct: "1.5%", amount: plotAreaSqM * asrRate * 0.015 },
         { name: "City Dev Charges - Res", rate: formatRate(asrRate), pct: "2%", amount: res * asrRate * 0.02 },
         { name: "City Dev Charges - Comm", rate: formatRate(asrRate), pct: "4%", amount: comm * asrRate * 0.04 },
-        { name: "Ancillary", rate: formatRate(asrRate), pct: "1%", amount: ancillaryArea * asrRate * 0.01 },
-        { name: "Area as per Tip", rate: "As per Ancillary", pct: ancillaryArea > 0 ? "1%" : "", amount: ancillaryArea * asrRate * 0.01 },
+        { name: "Ancillary", rate: formatRate(asrRate), pct: "1%", amount: ancillaryAmount },
+        { name: "Area as per Tip", rate: "As per Ancillary", pct: ancillaryArea > 0 ? "1%" : "", amount: ancillaryAmount },
         { name: "Marginal Distance Penalty", rate: formatRate(asrRate), pct: "10%", amount: margins * asrRate * 0.10 }
     ];
 
