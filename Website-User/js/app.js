@@ -195,6 +195,8 @@
                 lang = btn.dataset.lang;
                 applyI18n();
                 if (lastResult) displayReceipt(lastResult);
+                if (calcType === "fsi") updateFsiCalculator();
+                if (calcType === "home-planning") updateHomePlanning();
             });
         });
     }
@@ -205,20 +207,11 @@
                 calcType = btn.dataset.calc;
                 $$(".calc-tab").forEach((b) => b.classList.remove("active"));
                 btn.classList.add("active");
-                const buFields = $("#built-up-fields");
-                const authSel = $("#authority-selector");
-                if (calcType === "built-up") {
-                    buFields.classList.remove("hidden");
-                    if (authSel) authSel.classList.add("hidden");
-                } else {
-                    buFields.classList.add("hidden");
-                    if (authSel) authSel.classList.remove("hidden");
-                }
+                updateCalcView();
                 resetReceipt();
             });
         });
 
-        // Authority button clicks
         $$(".authority-btn").forEach((btn) => {
             btn.addEventListener("click", () => {
                 calcAuthority = btn.dataset.authority;
@@ -228,6 +221,226 @@
             });
         });
 
+        updateCalcView();
+    }
+
+    function updateCalcView() {
+        const buFields = $("#built-up-fields");
+        const authSel = $("#authority-selector");
+        const chargeView = $("#charge-calculator-view");
+        const fsiView = $("#fsi-calculator-view");
+        const hpView = $("#home-planning-view");
+
+        const showCharge = calcType === "open-plot" || calcType === "built-up";
+        const showFsi = calcType === "fsi";
+        const showHp = calcType === "home-planning";
+
+        if (chargeView) chargeView.classList.toggle("hidden", !showCharge);
+        if (fsiView) fsiView.classList.toggle("hidden", !showFsi);
+        if (hpView) hpView.classList.toggle("hidden", !showHp);
+
+        if (showFsi) {
+            if (authSel) authSel.classList.add("hidden");
+            if (buFields) buFields.classList.add("hidden");
+            updateFsiCalculator();
+            return;
+        }
+
+        if (showHp) {
+            if (authSel) authSel.classList.add("hidden");
+            if (buFields) buFields.classList.add("hidden");
+            updateHomePlanning();
+            return;
+        }
+
+        if (calcType === "built-up") {
+            if (buFields) buFields.classList.remove("hidden");
+            if (authSel) authSel.classList.add("hidden");
+        } else {
+            if (buFields) buFields.classList.add("hidden");
+            if (authSel) authSel.classList.remove("hidden");
+        }
+    }
+
+    function renderFsiSlabTable(activeId) {
+        const tbody = $("#fsi-slab-tbody");
+        if (!tbody || typeof FSI_SLABS === "undefined") return;
+        tbody.innerHTML = FSI_SLABS.map((s) => {
+            const active = s.id === activeId ? " active" : "";
+            const prem = s.prem > 0 ? formatFsiFsi(s.prem) : "—";
+            const tdr = s.tdr > 0 ? formatFsiFsi(s.tdr) : "—";
+            const label = lang === "mr" ? s.labelMr : s.labelEn;
+            return `<tr class="fsi-slab-row${active}" data-slab="${s.id}">
+                <td>${label}</td>
+                <td>${formatFsiFsi(s.basic)}</td>
+                <td>${prem}</td>
+                <td>${tdr}</td>
+                <td>${formatFsiFsi(s.maxPotential)}</td>
+            </tr>`;
+        }).join("");
+    }
+
+    function updateFsiCalculator() {
+        const plotEl = $("#fsi-plot-area");
+        const roadEl = $("#fsi-road-width");
+        const premSlider = $("#fsi-prem-slider");
+        const tdrSlider = $("#fsi-tdr-slider");
+        if (!plotEl || !roadEl || !premSlider || !tdrSlider) return;
+
+        const plot = parseNum(plotEl.value);
+        const road = parseNum(roadEl.value);
+        const slab = typeof findFsiSlab === "function" ? findFsiSlab(roadEl.value.trim() === "" ? NaN : road) : null;
+
+        const badge = $("#fsi-slab-badge");
+        if (badge) {
+            if (!slab || roadEl.value.trim() === "") {
+                badge.textContent = t("fsiEnterRoad", lang);
+                badge.classList.remove("active");
+            } else {
+                const label = lang === "mr" ? slab.labelMr : slab.labelEn;
+                badge.textContent = t("fsiSlabBadge", lang)
+                    .replace("{road}", formatFsiFsi(road))
+                    .replace("{slab}", label);
+                badge.classList.add("active");
+            }
+        }
+
+        const premMax = slab ? slab.prem : 0;
+        const tdrMax = slab ? slab.tdr : 0;
+
+        premSlider.max = String(premMax);
+        tdrSlider.max = String(tdrMax);
+        premSlider.disabled = premMax <= 0;
+        tdrSlider.disabled = tdrMax <= 0;
+
+        let premVal = parseFloat(premSlider.value) || 0;
+        let tdrVal = parseFloat(tdrSlider.value) || 0;
+        if (premVal > premMax) premVal = premMax;
+        if (tdrVal > tdrMax) tdrVal = tdrMax;
+        if (premMax <= 0) premVal = 0;
+        if (tdrMax <= 0) tdrVal = 0;
+        premSlider.value = String(premVal);
+        tdrSlider.value = String(tdrVal);
+
+        const premValueEl = $("#fsi-prem-value");
+        const tdrValueEl = $("#fsi-tdr-value");
+        if (premValueEl) premValueEl.textContent = formatFsiFsi(premVal) + " / " + formatFsiFsi(premMax);
+        if (tdrValueEl) tdrValueEl.textContent = formatFsiFsi(tdrVal) + " / " + formatFsiFsi(tdrMax);
+
+        const result = calculateFsi(plot || 0, roadEl.value.trim() === "" ? NaN : road, premVal, tdrVal);
+
+        const setText = (id, val) => {
+            const el = $(id);
+            if (el) el.textContent = formatFsiArea(val);
+        };
+        setText("#fsi-basic-area", result.basicArea);
+        setText("#fsi-prem-area", result.premArea);
+        setText("#fsi-tdr-area", result.tdrArea);
+        setText("#fsi-max-area", result.maxArea);
+        setText("#fsi-total-area", result.totalArea);
+
+        const capNote = $("#fsi-cap-note");
+        if (capNote) {
+            capNote.textContent = result.capped ? t("fsiCapCapped", lang) : t("fsiCapWithin", lang);
+            capNote.classList.toggle("capped", !!result.capped);
+        }
+
+        renderFsiSlabTable(result.slab ? result.slab.id : null);
+    }
+
+    function initFsiCalculator() {
+        const plotEl = $("#fsi-plot-area");
+        const roadEl = $("#fsi-road-width");
+        const premSlider = $("#fsi-prem-slider");
+        const tdrSlider = $("#fsi-tdr-slider");
+        if (!plotEl || !roadEl) return;
+
+        const onNumeric = (e) => {
+            if (!/^\d*\.?\d*$/.test(e.target.value) && e.target.value !== "") {
+                e.target.value = e.target.value.replace(/[^\d.]/g, "");
+            }
+            updateFsiCalculator();
+        };
+
+        plotEl.addEventListener("input", onNumeric);
+        roadEl.addEventListener("input", onNumeric);
+        if (premSlider) premSlider.addEventListener("input", updateFsiCalculator);
+        if (tdrSlider) tdrSlider.addEventListener("input", updateFsiCalculator);
+
+        renderFsiSlabTable(null);
+        updateFsiCalculator();
+    }
+
+    let hpUnit = "sqft";
+    let hpQuality = "medium";
+
+    function updateHomePlanning() {
+        if (typeof calculateHomePlanning !== "function") return;
+        const areaEl = $("#hp-area");
+        if (!areaEl) return;
+        const area = parseNum(areaEl.value) || 0;
+        const result = calculateHomePlanning(area, hpUnit, hpQuality);
+
+        const costSqftEl = $("#hp-cost-sqft");
+        const totalEl = $("#hp-total-cost");
+        if (costSqftEl) costSqftEl.textContent = formatHomePlanningInr(result.costPerSqFt);
+        if (totalEl) totalEl.textContent = formatHomePlanningInr(result.totalCost);
+
+        const phaseBody = $("#hp-phase-tbody");
+        if (phaseBody) {
+            phaseBody.innerHTML = result.phases.map((p) => {
+                const name = lang === "mr" ? p.nameMr : p.nameEn;
+                return `<tr>
+                    <td>${name}</td>
+                    <td>${p.pct}%</td>
+                    <td>${formatHomePlanningInr(p.amount)}</td>
+                </tr>`;
+            }).join("");
+        }
+
+        const resBody = $("#hp-resource-tbody");
+        if (resBody) {
+            resBody.innerHTML = result.resources.map((r) => {
+                const name = lang === "mr" ? r.nameMr : r.nameEn;
+                const unit = lang === "mr" ? r.unitMr : r.unitEn;
+                return `<tr>
+                    <td>${name}</td>
+                    <td>${formatHomePlanningQty(r.qty)} ${unit}</td>
+                    <td>${formatHomePlanningInr(r.rate)}</td>
+                    <td>${formatHomePlanningInr(r.amount)}</td>
+                </tr>`;
+            }).join("");
+        }
+    }
+
+    function initHomePlanning() {
+        const areaEl = $("#hp-area");
+        if (!areaEl) return;
+
+        areaEl.addEventListener("input", (e) => {
+            if (!/^\d*\.?\d*$/.test(e.target.value) && e.target.value !== "") {
+                e.target.value = e.target.value.replace(/[^\d.]/g, "");
+            }
+            updateHomePlanning();
+        });
+
+        $$(".hp-unit-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                hpUnit = btn.dataset.unit;
+                $$(".hp-unit-btn").forEach((b) => b.classList.toggle("active", b === btn));
+                updateHomePlanning();
+            });
+        });
+
+        $$(".hp-quality-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                hpQuality = btn.dataset.quality;
+                $$(".hp-quality-btn").forEach((b) => b.classList.toggle("active", b === btn));
+                updateHomePlanning();
+            });
+        });
+
+        updateHomePlanning();
     }
 
     function resetReceipt() {
@@ -301,19 +514,23 @@
 
         if (calcType === "open-plot") {
             lastResult = calculateOpenPlot(plotSqM, asrRate, calcAuthority);
-        } else {
+        } else if (calcType === "built-up") {
             lastResult = calculateBuiltUp(
                 plotSqM, asrRate,
                 parseNum($("#bu-res").value) || 0,
                 parseNum($("#bu-comm").value) || 0,
                 parseNum($("#bu-margins").value) || 0
             );
+        } else {
+            return;
         }
 
         displayReceipt(lastResult);
     }
 
     function runCalculate() {
+        if (calcType === "fsi" || calcType === "home-planning") return;
+
         ["err-plot-sqft", "err-plot-sqm", "err-asr-rate", "err-bu-res", "err-bu-comm", "err-bu-margins"].forEach((id) => showError("#" + id, null));
 
         const sqftErr = validateField($("#plot-sqft").value.trim(), t("plotAreaSqM", lang), false);
@@ -491,6 +708,8 @@
         initSteppers();
         initInputs();
         initCalculate();
+        initFsiCalculator();
+        initHomePlanning();
         initSectors();
         initMapViewer();
         initFooter();

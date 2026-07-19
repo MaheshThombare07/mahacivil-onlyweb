@@ -121,3 +121,78 @@ const SECTOR_BASE = "https://shivdeveloper4.users.earthengine.app/view/";
 function sectorUrl(slug) {
     return SECTOR_BASE + slug;
 }
+
+/** UDCPR Table 6-G road-width slabs (min inclusive, max exclusive; last open-ended) */
+const FSI_SLABS = [
+    { id: "below9",  labelEn: "Below 9 m",        labelMr: "९ मी पेक्षा कमी",     min: 0,  max: 9,  basic: 1.10, prem: 0,    tdr: 0,    maxPotential: 1.10 },
+    { id: "9to12",   labelEn: "9 m – <12 m",       labelMr: "९ मी – <१२ मी",       min: 9,  max: 12, basic: 1.10, prem: 0.50, tdr: 0.40, maxPotential: 2.00 },
+    { id: "12to15",  labelEn: "12 m – <15 m",      labelMr: "१२ मी – <१५ मी",      min: 12, max: 15, basic: 1.10, prem: 0.50, tdr: 0.65, maxPotential: 2.25 },
+    { id: "15to24",  labelEn: "15 m – <24 m",      labelMr: "१५ मी – <२४ मी",      min: 15, max: 24, basic: 1.10, prem: 0.50, tdr: 0.90, maxPotential: 2.50 },
+    { id: "24to30",  labelEn: "24 m – <30 m",      labelMr: "२४ मी – <३० मी",      min: 24, max: 30, basic: 1.10, prem: 0.50, tdr: 1.15, maxPotential: 2.75 },
+    { id: "30plus",  labelEn: "30 m and above",    labelMr: "३० मी आणि अधिक",     min: 30, max: Infinity, basic: 1.10, prem: 0.50, tdr: 1.40, maxPotential: 3.00 }
+];
+
+function findFsiSlab(roadWidth) {
+    const road = Number(roadWidth);
+    if (roadWidth === "" || roadWidth == null || isNaN(road) || road < 0) return null;
+    return FSI_SLABS.find((s) => road >= s.min && road < s.max) || FSI_SLABS[FSI_SLABS.length - 1];
+}
+
+function formatFsiArea(v) {
+    return Number(v || 0).toLocaleString("en-IN", { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+}
+
+function formatFsiFsi(v) {
+    return Number(v || 0).toFixed(2);
+}
+
+/**
+ * FSI & Premium Calculator — UDCPR Table 6-G
+ * premOpted: 0..slab.prem, tdrOpted: 0..slab.tdr
+ */
+function calculateFsi(plotArea, roadWidth, premOpted, tdrOpted) {
+    const area = Number(plotArea) || 0;
+    const slab = findFsiSlab(roadWidth);
+    if (!slab || area <= 0) {
+        return {
+            slab: null,
+            premOpted: 0,
+            tdrOpted: 0,
+            basicArea: 0,
+            premArea: 0,
+            tdrArea: 0,
+            maxArea: 0,
+            totalArea: 0,
+            capped: false,
+            premiumAllowed: false,
+            tdrAllowed: false
+        };
+    }
+
+    const premMax = slab.prem || 0;
+    const tdrMax = slab.tdr || 0;
+    const prem = Math.min(Math.max(0, Number(premOpted) || 0), premMax);
+    const tdr = Math.min(Math.max(0, Number(tdrOpted) || 0), tdrMax);
+
+    const basicArea = area * slab.basic;
+    const premArea = area * prem;
+    const tdrArea = area * tdr;
+    const maxArea = area * slab.maxPotential;
+    let totalArea = basicArea + premArea + tdrArea;
+    const capped = totalArea > maxArea;
+    if (capped) totalArea = maxArea;
+
+    return {
+        slab,
+        premOpted: prem,
+        tdrOpted: tdr,
+        basicArea,
+        premArea,
+        tdrArea,
+        maxArea,
+        totalArea,
+        capped,
+        premiumAllowed: premMax > 0,
+        tdrAllowed: tdrMax > 0
+    };
+}
