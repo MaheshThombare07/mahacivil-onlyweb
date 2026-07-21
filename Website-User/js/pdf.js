@@ -120,10 +120,26 @@ function getPrintStyles() {
         .print-total-label { font-size: 12px; }
         .print-total-value { font-size: 15px; }
         .print-footer {
-            margin-top: 8px;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid #d5e3e0;
             font-size: 10px;
-            color: #6b8480;
+            color: #5a736f;
             text-align: center;
+            line-height: 1.45;
+        }
+        .print-footer-firm {
+            display: block;
+            font-size: 12px;
+            font-weight: 800;
+            color: #0f5c52;
+            margin-bottom: 2px;
+        }
+        .print-footer-phone {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f2f2c;
         }
         @media print {
             html, body { height: auto !important; overflow: hidden !important; }
@@ -351,7 +367,10 @@ function buildPrintReceiptHtml(result, lang) {
                     <span class="print-total-label">${t("total", lang)}</span>
                     <span class="print-total-value">${formatTotal(result.total)}</span>
                 </div>
-                <div class="print-footer">MahaCivil · ${title}</div>
+                <div class="print-footer">
+                    <span class="print-footer-firm">Vaibhav Budhwant Associates</span>
+                    <span class="print-footer-phone">+91 95790 22322</span>
+                </div>
             </div>
         </div>
     `;
@@ -424,7 +443,8 @@ function buildAsrPdfHtml(data, lang) {
                     <tbody>${tableRows}</tbody>
                 </table>
                 <div class="print-footer">
-                    <strong>MahaCivil</strong> · ${rows.length} ${t("asrRowCount", lang)}
+                    <span class="print-footer-firm">Vaibhav Budhwant Associates</span>
+                    <span class="print-footer-phone">+91 95790 22322</span>
                 </div>
             </div>
         </div>

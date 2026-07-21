@@ -28,6 +28,12 @@
         if (document.body.dataset.page) {
             document.title = getPageTitle(document.body.dataset.page);
         }
+        if ($("#csmrda-map-list")) {
+            initCsmrdaMaps();
+        }
+        if ($("#sector-list")) {
+            renderSectors();
+        }
     }
 
     function showError(id, msg) {
@@ -81,7 +87,10 @@
         about: "view-home",
         contact: "view-home",
         "asr-rates": "view-easr",
+        "fsi-calculator": "view-fsi",
+        "construction-estimate": "view-construction",
         "dp-maps": "view-dp",
+        "csmrda-maps": "view-csmrda",
     };
 
     const HOME_SCROLL_SECTIONS = new Set(["calculator", "services", "downloads", "about", "contact"]);
@@ -96,8 +105,11 @@
         const titles = {
             home: t("homePageTitle", lang),
             calculator: t("navCalculator", lang) + suffix,
+            "fsi-calculator": t("fsiShort", lang) + suffix,
+            "construction-estimate": t("homePlanningShort", lang) + suffix,
             "asr-rates": t("navAsr", lang) + suffix,
             "dp-maps": t("navDp", lang) + suffix,
+            "csmrda-maps": t("navCsmrda", lang) + suffix,
             services: t("navServices", lang) + suffix,
             downloads: t("downloadsSectionTitle", lang) + suffix,
             about: t("navAbout", lang) + suffix,
@@ -195,8 +207,8 @@
                 lang = btn.dataset.lang;
                 applyI18n();
                 if (lastResult) displayReceipt(lastResult);
-                if (calcType === "fsi") updateFsiCalculator();
-                if (calcType === "home-planning") updateHomePlanning();
+                updateFsiCalculator();
+                updateHomePlanning();
             });
         });
     }
@@ -227,31 +239,6 @@
     function updateCalcView() {
         const buFields = $("#built-up-fields");
         const authSel = $("#authority-selector");
-        const chargeView = $("#charge-calculator-view");
-        const fsiView = $("#fsi-calculator-view");
-        const hpView = $("#home-planning-view");
-
-        const showCharge = calcType === "open-plot" || calcType === "built-up";
-        const showFsi = calcType === "fsi";
-        const showHp = calcType === "home-planning";
-
-        if (chargeView) chargeView.classList.toggle("hidden", !showCharge);
-        if (fsiView) fsiView.classList.toggle("hidden", !showFsi);
-        if (hpView) hpView.classList.toggle("hidden", !showHp);
-
-        if (showFsi) {
-            if (authSel) authSel.classList.add("hidden");
-            if (buFields) buFields.classList.add("hidden");
-            updateFsiCalculator();
-            return;
-        }
-
-        if (showHp) {
-            if (authSel) authSel.classList.add("hidden");
-            if (buFields) buFields.classList.add("hidden");
-            updateHomePlanning();
-            return;
-        }
 
         if (calcType === "built-up") {
             if (buFields) buFields.classList.remove("hidden");
@@ -529,19 +516,16 @@
     }
 
     function runCalculate() {
-        if (calcType === "fsi" || calcType === "home-planning") return;
-
         ["err-plot-sqft", "err-plot-sqm", "err-asr-rate", "err-bu-res", "err-bu-comm", "err-bu-margins"].forEach((id) => showError("#" + id, null));
 
-        const sqftErr = validateField($("#plot-sqft").value.trim(), t("plotAreaSqM", lang), false);
+        // Sq.ft converter is optional — user may enter Plot Area (Sq.m) directly
         const sqmErr = validateField($("#plot-sqm").value.trim(), t("plotAreaSqM", lang), false);
         const asrErr = validateField($("#asr-rate").value.trim(), t("asrRate", lang), false);
 
-        showError("#err-plot-sqft", sqftErr);
         showError("#err-plot-sqm", sqmErr);
         showError("#err-asr-rate", asrErr);
 
-        if (sqftErr || sqmErr || asrErr) return;
+        if (sqmErr || asrErr) return;
 
         if (calcType === "built-up") {
             const resErr = validateField($("#bu-res").value.trim(), t("builtUpRes", lang), true);
@@ -576,33 +560,196 @@
         });
     }
 
-    function initSectors() {
+    function renderSectors() {
         const list = $("#sector-list");
+        if (!list || typeof SECTORS === "undefined") return;
+        list.innerHTML = "";
         SECTORS.forEach((sector) => {
+            const title = lang === "mr" ? (sector.nameMr || sector.name) : sector.name;
+            const areas = lang === "mr" ? (sector.areasMr || sector.areasEn || []) : (sector.areasEn || []);
+
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "sector-btn";
-            btn.textContent = sector.name;
-            btn.addEventListener("click", () => openMapViewer(sector.name, sectorUrl(sector.slug)));
+            btn.setAttribute("aria-label", title + (areas.length ? ": " + areas.join(", ") : ""));
+
+            const titleEl = document.createElement("span");
+            titleEl.className = "sector-btn-title";
+            titleEl.textContent = title;
+
+            const areasEl = document.createElement("span");
+            areasEl.className = "sector-btn-areas";
+            areasEl.textContent = areas.join(" · ");
+
+            btn.appendChild(titleEl);
+            if (areas.length) btn.appendChild(areasEl);
+            btn.addEventListener("click", () => openMapViewer(title, sectorUrl(sector.slug)));
             list.appendChild(btn);
         });
     }
 
+    function initSectors() {
+        renderSectors();
+    }
+
+    function initCsmrdaMaps() {
+        const list = $("#csmrda-map-list");
+        if (!list || typeof CSMRDA_MAPS === "undefined") return;
+        list.innerHTML = "";
+        CSMRDA_MAPS.forEach((item, index) => {
+            const tr = document.createElement("tr");
+            const title = lang === "mr" ? item.nameMarathi : item.nameEnglish;
+
+            const tdNo = document.createElement("td");
+            tdNo.className = "csmrda-col-no";
+            tdNo.textContent = String(index + 1);
+
+            const tdEn = document.createElement("td");
+            tdEn.textContent = item.nameEnglish;
+
+            const tdMr = document.createElement("td");
+            tdMr.textContent = item.nameMarathi;
+
+            const tdMap = document.createElement("td");
+            tdMap.className = "csmrda-col-map";
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "csmrda-view-btn";
+            btn.textContent = t("csmrdaViewMap", lang);
+            btn.addEventListener("click", () => openMapViewer(title, item.mapUrl));
+            tdMap.appendChild(btn);
+
+            tr.appendChild(tdNo);
+            tr.appendChild(tdEn);
+            tr.appendChild(tdMr);
+            tr.appendChild(tdMap);
+            list.appendChild(tr);
+        });
+    }
+
+    let mapImageScale = 1;
+    let mapImageFitScale = 1;
+    let mapImageMode = false;
+
+    function isMapImageUrl(url) {
+        return /\.(png|jpe?g|webp|gif)(\?|#|$)/i.test(String(url || ""));
+    }
+
+    function getMapImageFitScale() {
+        const stage = $("#map-image-stage");
+        const img = $("#map-image");
+        if (!stage || !img || !img.naturalWidth) return 1;
+        const pad = 24;
+        const availW = Math.max(stage.clientWidth - pad, 80);
+        const availH = Math.max(stage.clientHeight - pad, 80);
+        return Math.min(availW / img.naturalWidth, availH / img.naturalHeight, 1);
+    }
+
+    function applyMapImageScale(scale) {
+        const img = $("#map-image");
+        if (!img || !img.naturalWidth) return;
+        const minScale = Math.min(mapImageFitScale * 0.5, mapImageFitScale);
+        const maxScale = Math.max(mapImageFitScale * 8, 2);
+        mapImageScale = Math.min(maxScale, Math.max(minScale, scale));
+        img.style.width = Math.round(img.naturalWidth * mapImageScale) + "px";
+        img.style.height = Math.round(img.naturalHeight * mapImageScale) + "px";
+    }
+
+    function fitMapImage() {
+        mapImageFitScale = getMapImageFitScale();
+        applyMapImageScale(mapImageFitScale);
+        const stage = $("#map-image-stage");
+        if (stage) {
+            stage.scrollLeft = 0;
+            stage.scrollTop = 0;
+        }
+    }
+
+    function setMapViewerMode(isImage) {
+        mapImageMode = isImage;
+        const viewer = $("#map-viewer");
+        const frame = $("#map-frame");
+        const stage = $("#map-image-stage");
+        const zoom = $("#map-zoom-controls");
+        const firm = $(".map-firm-name");
+        if (viewer) viewer.classList.toggle("map-modal-image", isImage);
+        if (frame) frame.classList.toggle("hidden", isImage);
+        if (stage) stage.classList.toggle("hidden", !isImage);
+        if (zoom) zoom.classList.toggle("hidden", !isImage);
+        if (firm) firm.classList.toggle("hidden", isImage);
+    }
+
     function openMapViewer(title, url) {
         $("#map-sector-name").textContent = title;
-        $("#map-frame").src = url;
+        const asImage = isMapImageUrl(url);
+        setMapViewerMode(asImage);
+
+        if (asImage) {
+            const img = $("#map-image");
+            const frame = $("#map-frame");
+            if (frame) frame.src = "about:blank";
+            if (img) {
+                img.onload = () => fitMapImage();
+                img.src = url;
+                if (img.complete && img.naturalWidth) fitMapImage();
+            }
+        } else {
+            const img = $("#map-image");
+            if (img) {
+                img.onload = null;
+                img.removeAttribute("src");
+                img.style.width = "";
+                img.style.height = "";
+            }
+            $("#map-frame").src = url;
+        }
+
         $("#map-viewer").classList.remove("hidden");
         document.body.style.overflow = "hidden";
     }
 
     function closeMapViewer() {
         $("#map-frame").src = "about:blank";
+        const img = $("#map-image");
+        if (img) {
+            img.onload = null;
+            img.removeAttribute("src");
+            img.style.width = "";
+            img.style.height = "";
+        }
+        setMapViewerMode(false);
         $("#map-viewer").classList.add("hidden");
         document.body.style.overflow = "";
     }
 
     function initMapViewer() {
         $("#map-close").addEventListener("click", closeMapViewer);
+        const zoomIn = $("#map-zoom-in");
+        const zoomOut = $("#map-zoom-out");
+        const zoomFit = $("#map-zoom-fit");
+        if (zoomIn) zoomIn.addEventListener("click", () => applyMapImageScale(mapImageScale * 1.25));
+        if (zoomOut) zoomOut.addEventListener("click", () => applyMapImageScale(mapImageScale / 1.25));
+        if (zoomFit) zoomFit.addEventListener("click", fitMapImage);
+
+        const stage = $("#map-image-stage");
+        if (stage) {
+            stage.addEventListener("wheel", (e) => {
+                if (!mapImageMode || $("#map-viewer").classList.contains("hidden")) return;
+                e.preventDefault();
+                const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+                applyMapImageScale(mapImageScale * factor);
+            }, { passive: false });
+        }
+
+        window.addEventListener("resize", () => {
+            if (mapImageMode && !$("#map-viewer").classList.contains("hidden")) {
+                const prevFit = mapImageFitScale;
+                const wasFit = Math.abs(mapImageScale - prevFit) < 0.01;
+                mapImageFitScale = getMapImageFitScale();
+                if (wasFit) applyMapImageScale(mapImageFitScale);
+            }
+        });
+
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape" && !$("#map-viewer").classList.contains("hidden")) {
                 closeMapViewer();
@@ -711,6 +858,7 @@
         initFsiCalculator();
         initHomePlanning();
         initSectors();
+        initCsmrdaMaps();
         initMapViewer();
         initFooter();
         initDeveloperModal();

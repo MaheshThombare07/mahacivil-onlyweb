@@ -103,17 +103,94 @@ function chargeLabel(name, lang) {
 }
 
 const SECTORS = [
-    { id: "01", name: "Sector 01", slug: "sm-sector01" },
-    { id: "01a", name: "Sector 01A", slug: "sm-sector01a" },
-    { id: "02", name: "Sector 02", slug: "sm-sector2" },
-    { id: "03", name: "Sector 03", slug: "sm-sector03" },
-    { id: "04", name: "Sector 04", slug: "sm-sector04" },
-    { id: "05", name: "Sector 05", slug: "sm-sector05" },
-    { id: "06", name: "Sector 06", slug: "sm-sector06" },
-    { id: "07", name: "Sector 07", slug: "sm-sector07" },
-    { id: "08", name: "Sector 08", slug: "sm-sector08" },
-    { id: "09", name: "Sector 09", slug: "sm-sector09" },
-    { id: "10", name: "Sector 10", slug: "sm-sector10" }
+    {
+        id: "01",
+        name: "Sector 01",
+        nameMr: "सेक्टर ०१",
+        slug: "sm-sector01",
+        areasEn: ["Pahadsingpura", "Begampura", "Jaysingpura", "Padegaon", "Bavasingpura", "Mitmita", "Bhavsingpura"],
+        areasMr: ["पहाडसिंगपुरा", "बेगमपुरा", "जयसिंगपुरा", "पडेगांव", "बावसिंगपुरा", "मिटमिटा", "भावसिंगपुरा"]
+    },
+    {
+        id: "01a",
+        name: "Sector 01A",
+        nameMr: "सेक्टर ०१अ",
+        slug: "sm-sector01a",
+        areasEn: ["Mill Corner", "Noor Colony", "Bibi Ka Maqbara", "Ghati", "Asef Bag"],
+        areasMr: ["मिल कॉर्नर", "नूर कॉलनी", "बिबीका मकबरा", "घाटी", "आसेफ बाग"]
+    },
+    {
+        id: "02",
+        name: "Sector 02",
+        nameMr: "सेक्टर ०२",
+        slug: "sm-sector2",
+        areasEn: ["Majipura", "Mahaveer Chowk", "Kranti Chowk", "Paithan Gate", "Sanjay Nagar (Slum)", "Siddharth Garden", "Baba Petrol Pump"],
+        areasMr: ["माजीपुरा", "महावीर चौक", "क्रांती चौक", "पैठण गेट", "संजय नगर (झोपडपट्टी)", "सिद्धार्थ गार्डन", "बाबा पेट्रोल पंप"]
+    },
+    {
+        id: "03",
+        name: "Sector 03",
+        nameMr: "सेक्टर ०३",
+        slug: "sm-sector03",
+        areasEn: ["Collector Office", "Jasvantpura", "Kiradpura", "Indira Nagar (Slum)", "Harsh Nagar (Slum)"],
+        areasMr: ["जिल्हाधिकारी कार्यालय", "जसवंतपुरा", "किराडपुरा", "इंदिरा नगर (झोपडपट्टी)", "हर्ष नगर (झोपडपट्टी)"]
+    },
+    {
+        id: "04",
+        name: "Sector 04",
+        nameMr: "सेक्टर ०४",
+        slug: "sm-sector04",
+        areasEn: ["Harsul", "Jadhavwadi (Agri. Market Committee)", "Himayat Nagar"],
+        areasMr: ["हर्सुल", "जाधववाडी (कृषी बाजार समिती)", "हिमायतनगर"]
+    },
+    {
+        id: "05",
+        name: "Sector 05",
+        nameMr: "सेक्टर ०५",
+        slug: "sm-sector05",
+        areasEn: ["Chikalthana", "Brijwadi", "Nagegaon (Slum)", "Namakwadi", "CIDCO"],
+        areasMr: ["चिकलठाणा", "ब्रिजवाडी", "नगेगांव (झोपडपट्टी)", "नमकवाडी", "सिडको"]
+    },
+    {
+        id: "06",
+        name: "Sector 06",
+        nameMr: "सेक्टर ०६",
+        slug: "sm-sector06",
+        areasEn: ["Mukundwadi", "Satara (some part)", "Deolai (some part)", "Murtajapur", "Airport", "Chikalthana (part)"],
+        areasMr: ["मुकुंदवाडी", "सातारा (काही भाग)", "देवळाई (काही भाग)", "मुर्तजापूर", "विमानतळ", "चिकलठाणा (भाग)"]
+    },
+    {
+        id: "07",
+        name: "Sector 07",
+        nameMr: "सेक्टर ०७",
+        slug: "sm-sector07",
+        areasEn: ["Shanoorwadi", "Baghsher Jung", "Garkheda", "Satara (parts)", "Amar Madhubanaka"],
+        areasMr: ["शहानुरवाडी", "बागशेर जंग", "गारखेडा", "सातारा (भाग)", "अमर मधुबनका"]
+    },
+    {
+        id: "08",
+        name: "Sector 08",
+        nameMr: "सेक्टर ०८",
+        slug: "sm-sector08",
+        areasEn: ["Satara", "Devlai", "Mustafabad", "Shanoorwadi"],
+        areasMr: ["सातारा", "देवळाई", "मुस्तफाबाद", "शहानुरवाडी"]
+    },
+    {
+        id: "09",
+        name: "Sector 09",
+        nameMr: "सेक्टर ०९",
+        slug: "sm-sector09",
+        areasEn: ["J-Tower", "Satara (part)", "Shreya Nagar", "Usmanpura", "Kranti Chowk"],
+        areasMr: ["जे-टॉवर", "सातारा (भाग)", "श्रेया नगर", "उस्मानपुरा", "क्रांती चौक"]
+    },
+    {
+        id: "10",
+        name: "Sector 10",
+        nameMr: "सेक्टर १०",
+        slug: "sm-sector10",
+        areasEn: ["Itkheda", "Kanchanwadi", "Nakshatrawadi", "Padampura"],
+        areasMr: ["ईटखेडा", "कांचनवाडी", "नक्षत्रवाडी", "पदंपुरा"]
+    }
 ];
 
 const SECTOR_BASE = "https://shivdeveloper4.users.earthengine.app/view/";
@@ -121,6 +198,26 @@ const SECTOR_BASE = "https://shivdeveloper4.users.earthengine.app/view/";
 function sectorUrl(slug) {
     return SECTOR_BASE + slug;
 }
+
+/** Area-wise maps from https://csmrda.in/maps */
+const CSMRDA_MAPS = [
+    { nameEnglish: "Chhatrapati Sambhajinagar", nameMarathi: "छत्रपती संभाजीनगर", mapUrl: "https://csmrda.in/starterPage/Daultabad.png" },
+    { nameEnglish: "Bidkin", nameMarathi: "बिडकीन", mapUrl: "https://csmrda.in/starterPage/bidkin.png" },
+    { nameEnglish: "Daulatabad", nameMarathi: "दौलताबाद", mapUrl: "https://csmrda.in/starterPage/Daultabad.png" },
+    { nameEnglish: "Mahesmaal", nameMarathi: "महेशमाळ", mapUrl: "https://csmrda.in/starterPage/mahesmaal.png" },
+    { nameEnglish: "Navnagar", nameMarathi: "नवीनगर", mapUrl: "https://csmrda.in/starterPage/navangar.jpg" },
+    { nameEnglish: "Shulibhanjan", nameMarathi: "शुलिभंजन", mapUrl: "https://csmrda.in/starterPage/shulanjan.png" },
+    { nameEnglish: "Verul", nameMarathi: "वेरुळ", mapUrl: "https://csmrda.in/starterPage/verul.png" },
+    { nameEnglish: "Waluj", nameMarathi: "वालुज", mapUrl: "https://csmrda.in/starterPage/waluj_notified.png" },
+    { nameEnglish: "Waluj DP Nagar I", nameMarathi: "वालुज डीपी नगर १", mapUrl: "https://csmrda.in/starterPage/Waluj_DP_Nagar%20I.jpg" },
+    { nameEnglish: "Waluj DP Nagar II", nameMarathi: "वालुज डीपी नगर २", mapUrl: "https://csmrda.in/starterPage/Waluj_DP_Nagar%20II.jpg" },
+    { nameEnglish: "Sector I M (Jatwada, Ohar, Islampurwadi)", nameMarathi: "सेक्टर I M (जटवाडा, ओहळ, इस्लामपूरवाडी)", mapUrl: "https://csmrda.in/starterPage/sector_I%20(1).jpg" },
+    { nameEnglish: "Sector II N (Savangi, Tulapur, Ashrafpur, Krishnapur)", nameMarathi: "सेक्टर II N (सावंगी, तुलापुर, अशरफपूर, कृष्णापूर)", mapUrl: "https://csmrda.in/starterPage/sector_II.jpg" },
+    { nameEnglish: "Sector III P (Pisadevi, Hirapur, Fattepur)", nameMarathi: "सेक्टर III P (पिसादेवी, हिरापूर, फत्तेपूर)", mapUrl: "https://csmrda.in/starterPage/sector_III.jpg" },
+    { nameEnglish: "Sector IV Q (Balapur, Gandheli, Zalta, Sunderwadi)", nameMarathi: "सेक्टर IV Q (बालापूर, गांधेली, झल्टा, सुंदरवाडी)", mapUrl: "https://csmrda.in/starterPage/sector_IV%20(1).jpg" },
+    { nameEnglish: "Sector V R (Satara, Devlai)", nameMarathi: "सेक्टर V R (सातारा, देवलाई)", mapUrl: "https://csmrda.in/starterPage/sector_V.jpg" },
+    { nameEnglish: "Sector VI S (Georai, Gevrai Tanda)", nameMarathi: "सेक्टर VI S (गेवराई, गेवराई तांडा)", mapUrl: "https://csmrda.in/starterPage/sector_Vi.jpg" }
+];
 
 /** UDCPR Table 6-G road-width slabs (min inclusive, max exclusive; last open-ended) */
 const FSI_SLABS = [
