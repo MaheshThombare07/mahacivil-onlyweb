@@ -12,9 +12,34 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=35">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="css/style.css?v=39">
+    <script>
+        /* Dismiss educational disclaimer early so it never blocks the menu */
+        (function () {
+            try {
+                if (localStorage.getItem("mahacivil_edu_disclaimer_agreed") === "1") {
+                    document.documentElement.classList.add("edu-disclaimer-agreed");
+                }
+            } catch (e) { /* ignore */ }
+        })();
+        function mahacivilAgreeDisclaimer() {
+            try { localStorage.setItem("mahacivil_edu_disclaimer_agreed", "1"); } catch (e) { /* ignore */ }
+            var modal = document.getElementById("edu-disclaimer");
+            if (modal) modal.classList.add("hidden");
+            document.documentElement.classList.add("edu-disclaimer-agreed");
+            if (document.body) document.body.classList.remove("edu-disclaimer-open");
+        }
+    </script>
 </head>
-<body>
+<body class="edu-disclaimer-open">
+    <script>
+        if (document.documentElement.classList.contains("edu-disclaimer-agreed")) {
+            document.body.classList.remove("edu-disclaimer-open");
+            var _edu = document.getElementById("edu-disclaimer");
+            if (_edu) _edu.classList.add("hidden");
+        }
+    </script>
     <!-- Full-screen map modal -->
     <div id="map-viewer" class="map-modal hidden" role="dialog" aria-modal="true">
         <div class="map-modal-header">
@@ -34,16 +59,32 @@
         </div>
     </div>
 
+
+    <!-- Educational disclaimer -->
+    <div id="edu-disclaimer" class="edu-disclaimer" role="dialog" aria-modal="true" aria-labelledby="edu-disclaimer-title">
+        <div class="edu-disclaimer-backdrop"></div>
+        <div class="edu-disclaimer-card">
+            <div class="edu-disclaimer-icon" aria-hidden="true">!</div>
+            <h2 id="edu-disclaimer-title" data-i18n="eduDisclaimerTitle">Important Disclaimer</h2>
+            <p data-i18n="eduDisclaimerBody">This website and its calculators are made for educational purposes only. Before doing any legal work, permissions, filings, or payments, please get the results verified by a qualified architect or licensed professional.</p>
+            <button type="button" id="edu-disclaimer-agree" class="btn btn-primary" data-i18n="eduDisclaimerAgree" onclick="mahacivilAgreeDisclaimer()">I Agree</button>
+        </div>
+    </div>
+
     <!-- Site header -->
     <div class="site-top">
     <header class="site-header">
         <div class="container header-inner">
-            <a href="#home" class="site-logo" data-page="home">Maha<span>Civil</span></a>
+            <a href="#home" class="site-logo" data-page="home" aria-label="MahaCivil">
+                <img src="images/mahacivil-logo.png" alt="MahaCivil" class="site-logo-img" width="160" height="160">
+            </a>
             <nav class="site-nav" id="site-nav" aria-label="Main navigation">
                 <a href="#home" class="nav-link active" data-page="home" data-i18n="navHome">Home</a>
                 <a href="#calculator" class="nav-link" data-page="calculator" data-i18n="navCalculator">Calculator</a>
                 <a href="#fsi-calculator" class="nav-link" data-page="fsi-calculator" data-i18n="navFsi">FSI</a>
                 <a href="#construction-estimate" class="nav-link" data-page="construction-estimate" data-i18n="navConstruction">Estimate</a>
+                <a href="#building-permission" class="nav-link" data-page="building-permission" data-i18n="navBuilding">Building</a>
+                <a href="#layout-permission" class="nav-link" data-page="layout-permission" data-i18n="navLayout">Layout</a>
                 <a href="#asr-rates" class="nav-link" data-page="asr-rates" data-i18n="navAsrShort">eASR</a>
                 <a href="#dp-maps" class="nav-link" data-page="dp-maps" data-i18n="navDpShort">DP Maps</a>
                 <a href="#csmrda-maps" class="nav-link" data-page="csmrda-maps" data-i18n="navCsmrdaShort">CSMRDA</a>
@@ -746,6 +787,247 @@
         </section>
         </div>
 
+
+        <div id="view-building" class="site-view" data-page="building-permission">
+        <section id="building-permission" class="section page-section">
+            <div class="container">
+                <div class="section-head section-head-center">
+                    <p class="section-tag" data-i18n="heroTag">Chhatrapati Sambhajinagar</p>
+                    <h2 data-i18n="navBuildingFull">Building Permission</h2>
+                    <p class="section-tool-name" data-i18n="bpPageTitle">Building Permission Calculator</p>
+                    <p data-i18n="bpPageDesc">Enter area, ASR, and factors to estimate building permission charges.</p>
+                </div>
+                <div id="building-permission-view" class="perm-calc-view">
+                    <div class="calc-panel card perm-calc-card">
+                        <div class="perm-table-wrap">
+                            <table class="perm-table" aria-label="Building permission charges">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="bpColSr">Sr.</th>
+                                        <th data-i18n="bpColCharge">Charge</th>
+                                        <th data-i18n="bpColArea">Area (sq.m)</th>
+                                        <th data-i18n="bpColAsr">ASR</th>
+                                        <th data-i18n="bpColPct">%</th>
+                                        <th data-i18n="bpColFactor">Factor</th>
+                                        <th data-i18n="bpColTotal">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>BDC</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-area1" inputmode="decimal" min="0" step="any"></td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-asr1" inputmode="decimal" min="0" step="any"></td>
+                                        <td>2.00%</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-factor1" value="1" inputmode="decimal" min="0" step="any"></td>
+                                        <td class="perm-total" id="bp-total1">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>PREMIUM FSI</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-area2" inputmode="decimal" min="0" step="any"></td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-asr2" inputmode="decimal" min="0" step="any"></td>
+                                        <td>
+                                            <select id="bp-pct2" class="form-select perm-select">
+                                                <option value="0.20">20%</option>
+                                                <option value="0.35">35%</option>
+                                            </select>
+                                        </td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-factor2" value="1" inputmode="decimal" min="0" step="any"></td>
+                                        <td class="perm-total" id="bp-total2">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>ANCILLARY FSI</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-area3" inputmode="decimal" min="0" step="any"></td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-asr3" inputmode="decimal" min="0" step="any"></td>
+                                        <td>10%</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-factor3" value="1" inputmode="decimal" min="0" step="any"></td>
+                                        <td class="perm-total" id="bp-total3">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>SECURITY DEPOSIT</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-area4" inputmode="decimal" min="0" step="any"></td>
+                                        <td>20</td>
+                                        <td>100%</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-factor4" value="1" inputmode="decimal" min="0" step="any"></td>
+                                        <td class="perm-total" id="bp-total4">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td>LABOUR GOVT</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-area5" inputmode="decimal" min="0" step="any"></td>
+                                        <td>22869</td>
+                                        <td>0.99%</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-factor5" value="1" inputmode="decimal" min="0" step="any"></td>
+                                        <td class="perm-total" id="bp-total5">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>6</td>
+                                        <td>LABOUR CSMRDA</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-area6" inputmode="decimal" min="0" step="any"></td>
+                                        <td>22869</td>
+                                        <td>0.01%</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-factor6" value="1" inputmode="decimal" min="0" step="any"></td>
+                                        <td class="perm-total" id="bp-total6">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>7</td>
+                                        <td>LDC</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-area7" inputmode="decimal" min="0" step="any"></td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-asr7" inputmode="decimal" min="0" step="any"></td>
+                                        <td>0.50%</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-factor7" value="1" inputmode="decimal" min="0" step="any"></td>
+                                        <td class="perm-total" id="bp-total7">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>8</td>
+                                        <td>IDC</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-area8" inputmode="decimal" min="0" step="any"></td>
+                                        <td>120</td>
+                                        <td>100%</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-factor8" value="1" inputmode="decimal" min="0" step="any"></td>
+                                        <td class="perm-total" id="bp-total8">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>9</td>
+                                        <td>COMPOUNDING</td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-area9" inputmode="decimal" min="0" step="any"></td>
+                                        <td>22869</td>
+                                        <td>
+                                            <select id="bp-pct9" class="form-select perm-select">
+                                                <option value="0.075">RESI 7.5%</option>
+                                                <option value="0.10">OTHER 10%</option>
+                                            </select>
+                                        </td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-factor9" value="1" inputmode="decimal" min="0" step="any"></td>
+                                        <td class="perm-total" id="bp-total9">0.00</td>
+                                    </tr>
+                                    <tr class="perm-grand-row">
+                                        <td colspan="6" class="perm-grand-label" data-i18n="bpGrandTotal">Grand Total</td>
+                                        <td class="perm-grand-value" id="bp-grandTotal">0.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" id="bp-recalculate" class="btn btn-primary perm-recalc-btn" data-i18n="bpRecalculate">Recalculate All</button>
+                        <p class="perm-note muted" data-i18n="bpFormulaNote">Formula: Area × ASR × Percentage × Factor</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        </div>
+
+        <div id="view-layout" class="site-view" data-page="layout-permission">
+        <section id="layout-permission" class="section page-section">
+            <div class="container">
+                <div class="section-head section-head-center">
+                    <p class="section-tag" data-i18n="heroTag">Chhatrapati Sambhajinagar</p>
+                    <h2 data-i18n="navLayoutFull">Layout Permission</h2>
+                    <p class="section-tool-name" data-i18n="lpPageTitle">Layout Permission Calculator</p>
+                    <p data-i18n="lpPageDesc">Estimate LDC, NA, IDC, and I-to-R charges for layout permission.</p>
+                </div>
+                <div id="layout-permission-view" class="perm-calc-view">
+                    <div class="calc-panel card perm-calc-card">
+                        <div class="perm-toggles">
+                            <label class="perm-check">
+                                <input type="checkbox" id="lp-is-cidco">
+                                <span data-i18n="lpCidcoLabel">CIDCO plot (applies IDC charge)</span>
+                            </label>
+                            <label class="perm-check">
+                                <input type="checkbox" id="lp-is-itor">
+                                <span data-i18n="lpItorLabel">Industrial to Residential conversion (applies I TO R charge)</span>
+                            </label>
+                            <div class="form-group">
+                                <label for="lp-zone-type" data-i18n="lpZoneLabel">Zone / Location (determines NA charge)</label>
+                                <select id="lp-zone-type" class="form-select">
+                                    <option value="yellow" data-i18n="lpZoneYellow">Yellow Zone (NA Not Applicable)</option>
+                                    <option value="green" data-i18n="lpZoneGreen">Green Zone (NA Applies)</option>
+                                    <option value="1.5km" data-i18n="lpZone15">1.5 km under Sambhajinagar (NA Applies)</option>
+                                    <option value="2km" data-i18n="lpZone2">2 km under Sambhajinagar (NA Applies)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="perm-table-wrap">
+                            <table class="perm-table" aria-label="Layout permission charges">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="bpColSr">Sr.</th>
+                                        <th data-i18n="bpColCharge">Type</th>
+                                        <th data-i18n="bpColArea">Area (sq.m)</th>
+                                        <th data-i18n="bpColAsr">ASR</th>
+                                        <th data-i18n="bpColPct">%</th>
+                                        <th data-i18n="bpColFactor">Factor</th>
+                                        <th data-i18n="bpColTotal">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td><strong>LDC</strong></td>
+                                        <td><input type="number" class="form-input perm-input" id="lp-area-ldc" inputmode="decimal" min="0" step="any" placeholder="Area"></td>
+                                        <td><input type="number" class="form-input perm-input" id="lp-asr-ldc" inputmode="decimal" min="0" step="any" placeholder="ASR"></td>
+                                        <td>0.50%</td>
+                                        <td>
+                                            <select id="lp-factor-ldc" class="form-select perm-select">
+                                                <option value="1.0">1.0 RESI</option>
+                                                <option value="1.5">1.5 INDUS</option>
+                                                <option value="2.0">2.0 COMM</option>
+                                            </select>
+                                        </td>
+                                        <td class="perm-total" id="lp-total-ldc">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>
+                                            <strong>NA</strong>
+                                            <span class="perm-sub" data-i18n="lpNaSub">One Time Conversion Premium</span>
+                                        </td>
+                                        <td><input type="number" class="form-input perm-input" id="lp-area-na" inputmode="decimal" min="0" step="any" placeholder="Area" disabled></td>
+                                        <td><input type="number" class="form-input perm-input" id="lp-asr-na" inputmode="decimal" min="0" step="any" placeholder="ASR" disabled></td>
+                                        <td>
+                                            <select id="lp-pct-na" class="form-select perm-select" disabled>
+                                                <option value="0.10">0.10%</option>
+                                                <option value="0.25">0.25%</option>
+                                                <option value="0.50">0.50%</option>
+                                            </select>
+                                        </td>
+                                        <td>1</td>
+                                        <td class="perm-total" id="lp-total-na">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td><strong>IDC</strong></td>
+                                        <td><input type="number" class="form-input perm-input" id="lp-area-idc" inputmode="decimal" min="0" step="any" placeholder="Area" disabled></td>
+                                        <td>120 (Fixed)</td>
+                                        <td>100%</td>
+                                        <td>1</td>
+                                        <td class="perm-total" id="lp-total-idc">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td><strong>I TO R</strong></td>
+                                        <td><input type="number" class="form-input perm-input" id="lp-area-itor" inputmode="decimal" min="0" step="any" placeholder="Area" disabled></td>
+                                        <td><input type="number" class="form-input perm-input" id="lp-asr-itor" inputmode="decimal" min="0" step="any" placeholder="ASR" disabled></td>
+                                        <td>2.5%</td>
+                                        <td>1</td>
+                                        <td class="perm-total" id="lp-total-itor">0.00</td>
+                                    </tr>
+                                    <tr class="perm-grand-row">
+                                        <td colspan="6" class="perm-grand-label" data-i18n="bpGrandTotal">Grand Total</td>
+                                        <td class="perm-grand-value" id="lp-grand-total">0.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="perm-note muted" data-i18n="bpFormulaNote">Formula: Area × ASR × Percentage × Factor</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        </div>
+
         <div id="view-dp" class="site-view" data-page="dp-maps">
         <!-- DP Maps -->
         <section id="dp-maps" class="section page-section">
@@ -797,7 +1079,9 @@
         <div class="container">
             <div class="ft-grid">
                 <div class="ft-brand">
-                    <strong class="ft-logo">Maha<span>Civil</span></strong>
+                    <a href="#home" class="ft-logo" data-page="home" aria-label="MahaCivil">
+                        <img src="images/mahacivil-logo.png" alt="MahaCivil" class="ft-logo-img" width="140" height="140">
+                    </a>
                     <p data-i18n="footerTagline">Civil charges &amp; DP maps for Chhatrapati Sambhajinagar</p>
                 </div>
                 <div>
@@ -806,6 +1090,8 @@
                         <a href="#calculator" data-page="calculator" data-i18n="navCalculator">Calculator</a>
                         <a href="#fsi-calculator" data-page="fsi-calculator" data-i18n="fsiShort">FSI Calculator</a>
                         <a href="#construction-estimate" data-page="construction-estimate" data-i18n="homePlanningShort">Construction Estimate</a>
+                        <a href="#building-permission" data-page="building-permission" data-i18n="navBuildingFull">Building Permission</a>
+                        <a href="#layout-permission" data-page="layout-permission" data-i18n="navLayoutFull">Layout Permission</a>
                         <a href="#asr-rates" data-page="asr-rates" data-i18n="navAsr">eASR Rates</a>
                         <a href="#dp-maps" data-page="dp-maps" data-i18n="navDp">DP Maps</a>
                         <a href="#csmrda-maps" data-page="csmrda-maps" data-i18n="navCsmrda">CSMRDA Maps</a>
@@ -938,12 +1224,14 @@
 
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
-    <script src="js/i18n.js?v=26"></script>
+    <script src="js/i18n.js?v=27"></script>
     <script src="js/calculator.js?v=12"></script>
     <script src="js/home-planning.js?v=1"></script>
+    <script src="js/building-permission.js?v=1"></script>
+    <script src="js/layout-permission.js?v=1"></script>
     <script src="js/pdf.js?v=8"></script>
     <script src="js/asr.js?v=16"></script>
     <script src="js/auth.js?v=6"></script>
-    <script src="js/app.js?v=22"></script>
+    <script src="js/app.js?v=25"></script>
 </body>
 </html>

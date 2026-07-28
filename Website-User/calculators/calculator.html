@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Permission Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #e2e8f0;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 90px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+        }
+        select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #aaa;
+        }
+        .total-col {
+            background-color: #f1f5f9;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .grand-total-row {
+            background-color: #cbd5e1;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Building Permission Calculator</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>SR. NO.</th>
+                <th>CHARGE</th>
+                <th>AREA IN SQ. MT.</th>
+                <th>ASR</th>
+                <th>PERCENTAGE</th>
+                <th>FACTOR</th>
+                <th>TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 1. BDC -->
+            <tr>
+                <td>1</td>
+                <td>BDC</td>
+                <td><input type="number" id="area1" oninput="calculate()"></td>
+                <td><input type="number" id="asr1" oninput="calculate()"></td>
+                <td>2.00%</td>
+                <td><input type="number" id="factor1" value="1" oninput="calculate()"></td>
+                <td class="total-col" id="total1">0.00</td>
+            </tr>
+            <!-- 2. PREMIUM FSI -->
+            <tr>
+                <td>2</td>
+                <td>PREMIUM FSI</td>
+                <td><input type="number" id="area2" oninput="calculate()"></td>
+                <td><input type="number" id="asr2" oninput="calculate()"></td>
+                <td>
+                    <select id="pct2" onchange="calculate()">
+                        <option value="0.20">20%</option>
+                        <option value="0.35">35%</option>
+                    </select>
+                </td>
+                <td><input type="number" id="factor2" value="1" oninput="calculate()"></td>
+                <td class="total-col" id="total2">0.00</td>
+            </tr>
+            <!-- 3. ANCILLARY FSI -->
+            <tr>
+                <td>3</td>
+                <td>ANCILLARY FSI</td>
+                <td><input type="number" id="area3" oninput="calculate()"></td>
+                <td><input type="number" id="asr3" oninput="calculate()"></td>
+                <td>10%</td>
+                <td><input type="number" id="factor3" value="1" oninput="calculate()"></td>
+                <td class="total-col" id="total3">0.00</td>
+            </tr>
+            <!-- 4. SECURITY DEPOSIT -->
+            <tr>
+                <td>4</td>
+                <td>SECURITY DEPOSIT</td>
+                <td><input type="number" id="area4" oninput="calculate()"></td>
+                <td>20</td>
+                <td>100%</td>
+                <td><input type="number" id="factor4" value="1" oninput="calculate()"></td>
+                <td class="total-col" id="total4">0.00</td>
+            </tr>
+            <!-- 5. LABOUR GOVT -->
+            <tr>
+                <td>5</td>
+                <td>LABOUR GOVT</td>
+                <td><input type="number" id="area5" oninput="calculate()"></td>
+                <td>22869</td>
+                <td>0.99%</td>
+                <td><input type="number" id="factor5" value="1" oninput="calculate()"></td>
+                <td class="total-col" id="total5">0.00</td>
+            </tr>
+            <!-- 6. LABOUR CSMRDA -->
+            <tr>
+                <td>6</td>
+                <td>LABOUR CSMRDA</td>
+                <td><input type="number" id="area6" oninput="calculate()"></td>
+                <td>22869</td>
+                <td>0.01%</td>
+                <td><input type="number" id="factor6" value="1" oninput="calculate()"></td>
+                <td class="total-col" id="total6">0.00</td>
+            </tr>
+            <!-- 7. LDC -->
+            <tr>
+                <td>7</td>
+                <td>LDC</td>
+                <td><input type="number" id="area7" oninput="calculate()"></td>
+                <td><input type="number" id="asr7" oninput="calculate()"></td>
+                <td>0.50%</td>
+                <td><input type="number" id="factor7" value="1" oninput="calculate()"></td>
+                <td class="total-col" id="total7">0.00</td>
+            </tr>
+            <!-- 8. IDC -->
+            <tr>
+                <td>8</td>
+                <td>IDC</td>
+                <td><input type="number" id="area8" oninput="calculate()"></td>
+                <td>120</td>
+                <td>100%</td>
+                <td><input type="number" id="factor8" value="1" oninput="calculate()"></td>
+                <td class="total-col" id="total8">0.00</td>
+            </tr>
+            <!-- 9. COMPOUNDING -->
+            <tr>
+                <td>9</td>
+                <td>COMPOUNDING</td>
+                <td><input type="number" id="area9" oninput="calculate()"></td>
+                <td>22869</td>
+                <td>
+                    <select id="pct9" onchange="calculate()">
+                        <option value="0.075">RESI 7.5%</option>
+                        <option value="0.10">OTHER 10%</option>
+                    </select>
+                </td>
+                <td><input type="number" id="factor9" value="1" oninput="calculate()"></td>
+                <td class="total-col" id="total9">0.00</td>
+            </tr>
+            <!-- GRAND TOTAL -->
+            <tr class="grand-total-row">
+                <td colspan="6" style="text-align: right; padding-right: 20px;">GRAND TOTAL:</td>
+                <td id="grandTotal">0.00</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <button onclick="calculate()">Recalculate All</button>
+
+    <script>
+        function calculate() {
+            // Helper function to safely get numeric values from inputs
+            const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+            const setVal = (id, val) => document.getElementById(id).innerText = val.toFixed(2);
+
+            let grandTotal = 0;
+
+            // 1. BDC: Area * ASR * 2.00% * Factor
+            let bdc = getVal('area1') * getVal('asr1') * 0.02 * getVal('factor1');
+            setVal('total1', bdc); 
+            grandTotal += bdc;
+
+            // 2. PREMIUM FSI: Area * ASR * (20% or 35%) * Factor
+            let premPct = parseFloat(document.getElementById('pct2').value);
+            let prem = getVal('area2') * getVal('asr2') * premPct * getVal('factor2');
+            setVal('total2', prem); 
+            grandTotal += prem;
+
+            // 3. ANCILLARY FSI: Area * ASR * 10% * Factor
+            let anc = getVal('area3') * getVal('asr3') * 0.10 * getVal('factor3');
+            setVal('total3', anc); 
+            grandTotal += anc;
+
+            // 4. SECURITY DEPOSIT: Area * 20 * 100% * Factor
+            let sec = getVal('area4') * 20 * 1.00 * getVal('factor4');
+            setVal('total4', sec); 
+            grandTotal += sec;
+
+            // 5. LABOUR GOVT: Area * 22869 * 0.99% * Factor
+            let labG = getVal('area5') * 22869 * 0.0099 * getVal('factor5');
+            setVal('total5', labG); 
+            grandTotal += labG;
+
+            // 6. LABOUR CSMRDA: Area * 22869 * 0.01% * Factor
+            let labC = getVal('area6') * 22869 * 0.0001 * getVal('factor6');
+            setVal('total6', labC); 
+            grandTotal += labC;
+
+            // 7. LDC: Area * ASR * 0.50% * Factor
+            let ldc = getVal('area7') * getVal('asr7') * 0.005 * getVal('factor7');
+            setVal('total7', ldc); 
+            grandTotal += ldc;
+
+            // 8. IDC: Area * 120 * 100% * Factor
+            let idc = getVal('area8') * 120 * 1.00 * getVal('factor8');
+            setVal('total8', idc); 
+            grandTotal += idc;
+
+            // 9. COMPOUNDING: Area * 22869 * (7.5% or 10%) * Factor
+            let compPct = parseFloat(document.getElementById('pct9').value);
+            let comp = getVal('area9') * 22869 * compPct * getVal('factor9');
+            setVal('total9', comp); 
+            grandTotal += comp;
+
+            // Update Grand Total
+            setVal('grandTotal', grandTotal);
+        }
+    </script>
+</body>
+</html>

@@ -106,17 +106,23 @@ img, svg {
 }
 
 .site-logo {
-    font-family: var(--font-display);
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: var(--maha-blue);
+    display: inline-flex;
+    align-items: center;
     text-decoration: none;
-    letter-spacing: -0.03em;
     flex-shrink: 0;
     position: relative;
     z-index: 2;
-    background: var(--white);
-    padding-right: 4px;
+    background: transparent;
+    padding: 0;
+    line-height: 0;
+}
+
+.site-logo-img {
+    display: block;
+    height: 52px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
 }
 
 .site-logo span {
@@ -306,7 +312,8 @@ img, svg {
     position: fixed;
     inset: 0;
     background: rgba(15, 92, 82, 0.45);
-    z-index: 240;
+    /* Must stay below .site-header (202) / open drawer, or taps never reach menu links */
+    z-index: 201;
 }
 
 .mobile-nav-backdrop.hidden {
@@ -398,7 +405,7 @@ img, svg {
         overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
-        z-index: 250;
+        z-index: 260;
         transform: none;
         height: auto;
         max-width: none;
@@ -413,6 +420,23 @@ img, svg {
         display: flex;
     }
 
+    /* Keep drawer above dimmed backdrop so link taps navigate */
+    body.nav-open .site-top {
+        z-index: 400;
+    }
+
+    body.nav-open .site-header {
+        z-index: 262;
+    }
+
+    body.nav-open .mobile-nav-backdrop {
+        z-index: 250;
+    }
+
+    body.nav-open .header-inner {
+        overflow: visible;
+    }
+
     .site-nav .nav-link {
         color: rgba(255, 255, 255, 0.88);
         box-shadow: none;
@@ -423,6 +447,10 @@ img, svg {
         min-height: 48px;
         display: flex;
         align-items: center;
+        position: relative;
+        z-index: 1;
+        pointer-events: auto;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.15);
     }
 
     .site-nav .nav-link:hover,
@@ -2961,17 +2989,19 @@ img, svg {
 }
 
 .ft-logo {
-    display: block;
-    font-family: var(--font-display);
-    color: var(--white);
-    font-size: 1.4rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
     margin-bottom: 12px;
+    line-height: 0;
 }
 
-.ft-logo span {
-    color: var(--maha-orange-light);
+.ft-logo-img {
+    display: block;
+    height: 56px;
+    width: auto;
+    max-width: 180px;
+    object-fit: contain;
 }
 
 .ft-brand p {
@@ -3763,8 +3793,9 @@ img, svg {
         overflow: visible;
     }
 
-    .site-logo {
-        font-size: 1.15rem;
+    .site-logo-img {
+        height: 44px;
+        max-width: 130px;
     }
 
     .header-actions {
@@ -4088,8 +4119,9 @@ img, svg {
         font-size: 0.75rem;
     }
 
-    .site-logo {
-        font-size: 1.05rem;
+    .site-logo-img {
+        height: 40px;
+        max-width: 120px;
     }
 
     .btn {
@@ -4109,4 +4141,228 @@ img, svg {
     .authority-btn {
         max-width: none;
     }
+}
+
+/* ── Building / Layout Permission Calculators ── */
+.perm-calc-view {
+    margin-top: 8px;
+}
+
+.perm-calc-card {
+    padding: 20px 22px 24px;
+}
+
+.perm-toggles {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.perm-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--maha-blue);
+    cursor: pointer;
+}
+
+.perm-check input {
+    margin-top: 3px;
+    accent-color: var(--maha-teal);
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.perm-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.perm-table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.perm-table th,
+.perm-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-light);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.perm-table th {
+    background: var(--maha-bg);
+    color: var(--maha-blue);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.perm-table tbody tr:hover {
+    background: rgba(15, 92, 82, 0.03);
+}
+
+.perm-input,
+.perm-select {
+    width: 100%;
+    min-width: 88px;
+    padding: 8px 10px;
+    font-size: 0.88rem;
+}
+
+.perm-total {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--maha-teal);
+    white-space: nowrap;
+}
+
+.perm-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.perm-grand-row {
+    background: linear-gradient(135deg, rgba(10, 37, 64, 0.04), rgba(15, 92, 82, 0.06));
+}
+
+.perm-grand-row td {
+    border-bottom: none;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+.perm-grand-label {
+    text-align: right !important;
+    font-weight: 700;
+    color: var(--maha-blue);
+    font-size: 0.95rem;
+}
+
+.perm-grand-value {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--maha-blue);
+    font-variant-numeric: tabular-nums;
+}
+
+.perm-recalc-btn {
+    width: 100%;
+    max-width: 280px;
+}
+
+.perm-note {
+    margin: 14px 0 0;
+    font-size: 0.82rem;
+}
+
+@media (max-width: 700px) {
+    .perm-calc-card {
+        padding: 14px;
+    }
+
+    .perm-table {
+        min-width: 640px;
+        font-size: 0.82rem;
+    }
+
+    .perm-table th,
+    .perm-table td {
+        padding: 8px 8px;
+    }
+}
+
+/* ── Educational disclaimer ── */
+html.edu-disclaimer-agreed #edu-disclaimer {
+    display: none !important;
+}
+
+html.edu-disclaimer-agreed body.edu-disclaimer-open,
+body.edu-disclaimer-open:has(#edu-disclaimer.hidden) {
+    overflow: auto;
+}
+
+body.edu-disclaimer-open {
+    overflow: hidden;
+}
+
+.edu-disclaimer {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.edu-disclaimer.hidden {
+    display: none;
+}
+
+.edu-disclaimer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 37, 64, 0.62);
+    backdrop-filter: blur(5px);
+}
+
+.edu-disclaimer-card {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: 32px 28px 28px;
+    text-align: center;
+    animation: authSlideIn 0.25s ease;
+}
+
+.edu-disclaimer-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 92, 82, 0.1);
+    color: var(--maha-teal);
+    font-size: 1.4rem;
+    font-weight: 800;
+    border: 2px solid rgba(15, 92, 82, 0.25);
+}
+
+.edu-disclaimer-card h2 {
+    margin: 0 0 12px;
+    font-size: 1.35rem;
+    color: var(--maha-blue);
+}
+
+.edu-disclaimer-card p {
+    margin: 0 0 22px;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+}
+
+.edu-disclaimer-card .btn {
+    min-width: 160px;
 }

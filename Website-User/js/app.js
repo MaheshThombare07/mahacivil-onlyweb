@@ -89,6 +89,8 @@
         "asr-rates": "view-easr",
         "fsi-calculator": "view-fsi",
         "construction-estimate": "view-construction",
+        "building-permission": "view-building",
+        "layout-permission": "view-layout",
         "dp-maps": "view-dp",
         "csmrda-maps": "view-csmrda",
     };
@@ -107,6 +109,8 @@
             calculator: t("navCalculator", lang) + suffix,
             "fsi-calculator": t("fsiShort", lang) + suffix,
             "construction-estimate": t("homePlanningShort", lang) + suffix,
+            "building-permission": t("navBuildingFull", lang) + suffix,
+            "layout-permission": t("navLayoutFull", lang) + suffix,
             "asr-rates": t("navAsr", lang) + suffix,
             "dp-maps": t("navDp", lang) + suffix,
             "csmrda-maps": t("navCsmrda", lang) + suffix,
@@ -179,13 +183,16 @@
             backdrop.addEventListener("click", () => setMobileNavOpen(false));
         }
 
-        $$(".nav-link, .site-logo[data-page], a[data-page]").forEach((link) => {
-            link.addEventListener("click", (e) => {
-                const pageKey = link.dataset.page || (link.getAttribute("href") || "").replace(/^#/, "");
-                if (!pageKey || !PAGE_TO_VIEW[pageKey]) return;
-                e.preventDefault();
-                navigateTo(pageKey);
-            });
+        // Event delegation so mobile drawer links always navigate (backdrop/z-index safe)
+        document.addEventListener("click", (e) => {
+            const link = e.target.closest(".nav-link, .site-logo[data-page], a[data-page]");
+            if (!link || link.closest("#asr-results")) return;
+            // Ignore ASR pagination buttons that also use data-page
+            if (link.classList.contains("asr-page-link")) return;
+            const pageKey = link.dataset.page || (link.getAttribute("href") || "").replace(/^#/, "");
+            if (!pageKey || !PAGE_TO_VIEW[pageKey]) return;
+            e.preventDefault();
+            navigateTo(pageKey);
         });
 
         document.addEventListener("keydown", (e) => {
@@ -456,11 +463,14 @@
     }
 
     function initInputs() {
-        $("#plot-sqft").addEventListener("input", (e) => {
-            if (/^\d*\.?\d*$/.test(e.target.value) || e.target.value === "") {
-                updateSqFtResult();
-            }
-        });
+        const plotSqft = $("#plot-sqft");
+        if (plotSqft) {
+            plotSqft.addEventListener("input", (e) => {
+                if (/^\d*\.?\d*$/.test(e.target.value) || e.target.value === "") {
+                    updateSqFtResult();
+                }
+            });
+        }
         ["plot-sqm", "asr-rate", "bu-res", "bu-comm", "bu-margins"].forEach((id) => {
             const el = $("#" + id);
             if (el) {
@@ -547,8 +557,10 @@
     }
 
     function initCalculate() {
-        $("#btn-calculate").addEventListener("click", runCalculate);
-        $("#btn-pdf").addEventListener("click", () => {
+        const btnCalc = $("#btn-calculate");
+        const btnPdf = $("#btn-pdf");
+        if (btnCalc) btnCalc.addEventListener("click", runCalculate);
+        if (btnPdf) btnPdf.addEventListener("click", () => {
             if (!lastResult) {
                 alert(t("calculateFirst", lang));
                 return;
@@ -828,6 +840,51 @@
         document.body.classList.remove("dialog-open");
     }
 
+    function initEduDisclaimer() {
+        const STORAGE_KEY = "mahacivil_edu_disclaimer_agreed";
+        const modal = document.getElementById("edu-disclaimer");
+        const agreeBtn = document.getElementById("edu-disclaimer-agree");
+        if (!modal) return;
+
+        let agreed = false;
+        try {
+            agreed = localStorage.getItem(STORAGE_KEY) === "1"
+                || document.documentElement.classList.contains("edu-disclaimer-agreed");
+        } catch (_) {
+            agreed = document.documentElement.classList.contains("edu-disclaimer-agreed");
+        }
+
+        function dismiss() {
+            if (typeof window.mahacivilAgreeDisclaimer === "function") {
+                window.mahacivilAgreeDisclaimer();
+                return;
+            }
+            try {
+                localStorage.setItem(STORAGE_KEY, "1");
+            } catch (_) {
+                /* ignore */
+            }
+            modal.classList.add("hidden");
+            document.documentElement.classList.add("edu-disclaimer-agreed");
+            document.body.classList.remove("edu-disclaimer-open");
+        }
+
+        if (agreed) {
+            dismiss();
+            return;
+        }
+
+        modal.classList.remove("hidden");
+        document.body.classList.add("edu-disclaimer-open");
+
+        if (agreeBtn) {
+            agreeBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                dismiss();
+            });
+        }
+    }
+
     function initDeveloperModal() {
         const openBtn = $("#developed-by-btn");
         const closeBtn = $("#dev-modal-close");
@@ -848,6 +905,8 @@
     }
 
     function init() {
+        // Dismiss disclaimer first so a later init error cannot leave the menu blocked
+        initEduDisclaimer();
         applyI18n();
         initNavigation();
         initLanguage();
@@ -857,6 +916,12 @@
         initCalculate();
         initFsiCalculator();
         initHomePlanning();
+        if (typeof window.initBuildingPermission === "function") {
+            window.initBuildingPermission();
+        }
+        if (typeof window.initLayoutPermission === "function") {
+            window.initLayoutPermission();
+        }
         initSectors();
         initCsmrdaMaps();
         initMapViewer();
