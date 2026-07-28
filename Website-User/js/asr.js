@@ -206,6 +206,8 @@
         return String(value || "")
             .trim()
             .normalize("NFC")
+            .replace(/\u094D/g, "")
+            .replace(/\u0902/g, "")
             .replace(/\s+/g, " ");
     }
 
