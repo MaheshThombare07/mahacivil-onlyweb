@@ -579,6 +579,11 @@
             $("#asr-survey-no")?.focus();
             return;
         }
+        if (searchMode === "survey" && !/^\d{1,7}$/.test(surveyNo)) {
+            setStatus(t("asrSurveyNumericOnly", lang), true);
+            $("#asr-survey-no")?.focus();
+            return;
+        }
 
         const gen = ++ratesFetchGeneration;
         setStatus(t("asrLoading", lang), false);
@@ -910,6 +915,11 @@
         }
         if (searchMode === "survey" && !surveyNo) {
             calcSetStatus(t("asrEnterSurveyNo", lang), true);
+            document.querySelector("#calc-asr-survey-no")?.focus();
+            return;
+        }
+        if (searchMode === "survey" && !/^\d{1,7}$/.test(surveyNo)) {
+            calcSetStatus(t("asrSurveyNumericOnly", lang), true);
             document.querySelector("#calc-asr-survey-no")?.focus();
             return;
         }
