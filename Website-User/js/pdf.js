@@ -218,9 +218,13 @@ function buildReceiptHtml(result, lang) {
         `;
     } else {
         const s = result.summary;
+        const authLabel = result.authority === "cmrda"
+            ? t("authorityCmrda", lang)
+            : t("authorityCsmc", lang);
         summaryHtml = `
             <div class="summary-row"><span>${t("plotArea", lang)}</span><span>${formatArea(s.plotAreaSqM)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("asrRate", lang)}</span><span>${formatRate(s.asrRate)}</span></div>
+            <div class="summary-row"><span>${t("authorityLabel", lang)}</span><span><strong>${authLabel}</strong></span></div>
             <div class="summary-row"><span>${t("builtUpRes", lang)}</span><span>${formatArea(s.builtUpResidential)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("builtUpComm", lang)}</span><span>${formatArea(s.builtUpCommercial)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("builtUpMargins", lang)}</span><span>${formatArea(s.builtUpInMargins)} ${t("sqM", lang)}</span></div>
@@ -308,9 +312,13 @@ function buildPrintReceiptHtml(result, lang) {
         `;
     } else {
         const s = result.summary;
+        const authLabel = result.authority === "cmrda"
+            ? t("authorityCmrda", lang)
+            : t("authorityCsmc", lang);
         summaryRows = `
             <tr><td>${t("plotArea", lang)}</td><td>${formatArea(s.plotAreaSqM)} ${t("sqM", lang)}</td></tr>
             <tr><td>${t("asrRate", lang)}</td><td>${formatRate(s.asrRate)}</td></tr>
+            <tr><td>${t("authorityLabel", lang)}</td><td>${authLabel}</td></tr>
             <tr><td>${t("builtUpRes", lang)}</td><td>${formatArea(s.builtUpResidential)} ${t("sqM", lang)}</td></tr>
             <tr><td>${t("builtUpComm", lang)}</td><td>${formatArea(s.builtUpCommercial)} ${t("sqM", lang)}</td></tr>
             <tr><td>${t("builtUpMargins", lang)}</td><td>${formatArea(s.builtUpInMargins)} ${t("sqM", lang)}</td></tr>
@@ -453,4 +461,99 @@ function buildAsrPdfHtml(data, lang) {
 
 function printAsrRates(data, lang) {
     openPrintWindow(t("asrPortalTitle", lang), buildAsrPdfHtml(data, lang));
+}
+
+function buildHomePlanningPdfHtml(result, lang, unit) {
+    const dt = formatDateTime();
+    const title = t("homePlanningTitle", lang);
+    const qualityKey = result.quality || "medium";
+    const qualityMeta = (typeof HOME_PLANNING_QUALITY !== "undefined" && HOME_PLANNING_QUALITY[qualityKey])
+        ? HOME_PLANNING_QUALITY[qualityKey]
+        : null;
+    const qualityLabel = qualityMeta
+        ? (lang === "mr" ? qualityMeta.labelMr : qualityMeta.labelEn)
+        : qualityKey;
+    const areaLabel = unit === "sqm" ? t("hpSqM", lang) : t("hpSqFt", lang);
+    const areaValue = unit === "sqm"
+        ? (result.areaSqFt / 10.764)
+        : result.areaSqFt;
+
+    const phaseRows = (result.phases || []).map((p) => {
+        const name = lang === "mr" ? p.nameMr : p.nameEn;
+        return `<tr>
+            <td>${name}</td>
+            <td style="text-align:center;">${p.pct}%</td>
+            <td>${formatHomePlanningInr(p.amount)}</td>
+        </tr>`;
+    }).join("");
+
+    const resourceRows = (result.resources || []).map((r) => {
+        const name = lang === "mr" ? r.nameMr : r.nameEn;
+        const u = lang === "mr" ? r.unitMr : r.unitEn;
+        return `<tr>
+            <td>${name}</td>
+            <td style="text-align:center;">${formatHomePlanningQty(r.qty)} ${u}</td>
+            <td style="text-align:right;">${formatHomePlanningInr(r.rate)}</td>
+            <td>${formatHomePlanningInr(r.amount)}</td>
+        </tr>`;
+    }).join("");
+
+    return `
+        <div class="print-receipt">
+            <div class="print-header">
+                <div class="print-brand">MAHACIVIL</div>
+                <h1>${title}</h1>
+                <div class="print-date">${t("dateTime", lang)}: ${dt}</div>
+            </div>
+            <div class="print-body">
+                <h2>${t("userInputSummary", lang)}</h2>
+                <table class="summary-table">
+                    <tr><td>${t("hpBuiltUpArea", lang)}</td><td>${Number(areaValue).toLocaleString("en-IN", { maximumFractionDigits: 2 })} ${areaLabel}</td></tr>
+                    <tr><td>${t("hpQuality", lang)}</td><td>${qualityLabel}</td></tr>
+                    <tr><td>${t("hpCostPerSqFt", lang)}</td><td>${formatHomePlanningInr(result.costPerSqFt)}</td></tr>
+                    <tr><td>${t("hpTotalCost", lang)}</td><td>${formatHomePlanningInr(result.totalCost)}</td></tr>
+                    <tr><td>${t("asrSelectedDistrict", lang)}</td><td>${lang === "mr" ? "छत्रपती संभाजीनगर" : "Chhatrapati Sambhajinagar"}</td></tr>
+                </table>
+
+                <h2 class="print-charges-title">${t("hpPhasesTitle", lang)}</h2>
+                <table class="charges-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;">${t("hpColPhase", lang)}</th>
+                            <th>${t("hpColPct", lang)}</th>
+                            <th>${t("hpColAmount", lang)}</th>
+                        </tr>
+                    </thead>
+                    <tbody>${phaseRows}</tbody>
+                </table>
+
+                <h2 class="print-charges-title">${t("hpResourcesTitle", lang)}</h2>
+                <table class="charges-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;">${t("hpColResource", lang)}</th>
+                            <th>${t("hpColQty", lang)}</th>
+                            <th>${t("hpColRate", lang)}</th>
+                            <th>${t("hpColAmount", lang)}</th>
+                        </tr>
+                    </thead>
+                    <tbody>${resourceRows}</tbody>
+                </table>
+
+                <div class="print-total">
+                    <span>${t("hpTotalCost", lang)}</span>
+                    <span>${formatHomePlanningInr(result.totalCost)}</span>
+                </div>
+                <p style="margin:10px 0 0;font-size:10px;color:#5a736f;line-height:1.45;">${t("hpDisclaimer", lang)}</p>
+                <div class="print-footer">
+                    <span class="print-footer-firm">Vaibhav Budhwant Associates</span>
+                    <span class="print-footer-phone">+91 95790 22322</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function printHomePlanningEstimate(result, lang, unit) {
+    openPrintWindow(t("homePlanningTitle", lang), buildHomePlanningPdfHtml(result, lang, unit));
 }

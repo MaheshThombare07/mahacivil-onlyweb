@@ -35,23 +35,44 @@ function formatDateTime() {
     });
 }
 
-// authority: "cmrda" (10%) | "csmc" (50%)
+// authority: "cmrda" (CSMRDA) | "csmc"
 function calculateOpenPlot(plotAreaSqM, asrRate, authority) {
     const auth = authority === "cmrda" ? "cmrda" : "csmc";
     const bettermentRate = CONSTANTS.BETTERMENT_FIXED_RATE;   // 1836 Rs/sq.m fixed
-    const bettermentPct  = auth === "cmrda" ? 0.10 : 0.50;
-    const bettermentLabel = auth === "cmrda" ? "10%" : "50%";
+    // CSMC & CSMRDA open plot: Betterment 50%
+    const bettermentPct = 0.50;
+    const bettermentLabel = "50%";
 
     const charges = [
-        { serial: 1, name: "Scrutiny Fee",            rate: "4",                        pct: "NA",          amount: plotAreaSqM * 4 },
-        { serial: 2, name: "Land Dev Charges (eASR)", rate: formatRate(asrRate),        pct: "1.5%",        amount: plotAreaSqM * asrRate * 0.015 },
-        { serial: 3, name: "Betterment Charges",      rate: formatRate(bettermentRate), pct: bettermentLabel, amount: plotAreaSqM * bettermentRate * bettermentPct }
+        { serial: 1, name: "Scrutiny Fee",            rate: "4",                        pct: "NA",   amount: plotAreaSqM * 4 },
+        { serial: 2, name: "Land Dev Charges (eASR)", rate: formatRate(asrRate),        pct: "1.5%", amount: plotAreaSqM * asrRate * 0.015 },
     ];
+
+    // CSMRDA: extra Land Dev Charges = eASR × 0.50
+    if (auth === "cmrda") {
+        charges.push({
+            serial: 3,
+            name: "Land Dev Charges",
+            rate: formatRate(asrRate),
+            pct: "0.50",
+            amount: asrRate * 0.50
+        });
+    }
+
+    charges.push({
+        serial: auth === "cmrda" ? 4 : 3,
+        name: "Betterment Charges",
+        rate: formatRate(bettermentRate),
+        pct: bettermentLabel,
+        amount: plotAreaSqM * bettermentRate * bettermentPct
+    });
+
     const total = charges.reduce((s, c) => s + c.amount, 0);
     return { plotAreaSqM, asrRate, authority: auth, charges, total, type: "open-plot" };
 }
 
-function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins) {
+function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins, authority) {
+    const auth = authority === "cmrda" ? "cmrda" : "csmc";
     const maxBuiltUp = plotAreaSqM * CONSTANTS.MAX_BUILT_UP_FSI;
     const toBeRegularizedResidential = Math.min(res, maxBuiltUp);
     const ancillaryArea = Math.max(0, toBeRegularizedResidential - (plotAreaSqM * 1.1));
@@ -69,13 +90,18 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins) {
         notRegularizedArea
     };
 
-    const bettermentRate = asrRate * CONSTANTS.BETTERMENT_RATE_RATIO;
+    // CSMC: 0% (amount 0). CSMRDA/CMRDA: 50% of (plot area × ₹1836)
+    const bettermentRate = CONSTANTS.BETTERMENT_FIXED_RATE;
+    const bettermentPct = auth === "cmrda" ? 0.50 : 0;
+    const bettermentLabel = auth === "cmrda" ? "50%" : "0%";
+    const bettermentAmount = plotAreaSqM * bettermentRate * bettermentPct;
+
     const scrutinyArea = Math.max(plotAreaSqM, res + comm);
     const ancillaryAmount = ancillaryArea * asrRate * 0.10;
 
     const charges = [
         { name: "Scrutiny Fee", rate: "4", pct: "NA", amount: scrutinyArea * 4 },
-        { name: "Betterment Charges", rate: formatRate(bettermentRate), pct: "0%", amount: 0 },
+        { name: "Betterment Charges", rate: formatRate(bettermentRate), pct: bettermentLabel, amount: bettermentAmount },
         { name: "Land Dev Charges (eASR)", rate: formatRate(asrRate), pct: "1.5%", amount: plotAreaSqM * asrRate * 0.015 },
         { name: "City Dev Charges - Res", rate: formatRate(asrRate), pct: "2%", amount: toBeRegularizedResidential * asrRate * 0.02 },
         { name: "City Dev Charges - Comm", rate: formatRate(asrRate), pct: "4%", amount: toBeRegularizedCommercial * asrRate * 0.04 },
@@ -85,13 +111,14 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins) {
     ];
 
     const total = charges.reduce((s, c) => s + c.amount, 0);
-    return { summary, charges, total, type: "built-up" };
+    return { summary, charges, total, type: "built-up", authority: auth };
 }
 
 function chargeLabel(name, lang) {
     const map = {
         "Scrutiny Fee": "scrutinyFee",
         "Land Dev Charges (eASR)": "landDev",
+        "Land Dev Charges": "landDev50",
         "Betterment Charges": "betterment",
         "City Dev Charges - Res": "cityDevRes",
         "City Dev Charges - Comm": "cityDevComm",

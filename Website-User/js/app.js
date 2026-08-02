@@ -4,7 +4,7 @@
 (function () {
     let lang = "en";
     let calcType = "open-plot";
-    let calcAuthority = "csmc"; // "cmrda" (10%) | "csmc" (100%) — Open Plot only
+    let calcAuthority = "csmc"; // "cmrda" (CSMRDA) | "csmc" — Open Plot & Built Up
     let lastResult = null;
 
     const $ = (sel) => document.querySelector(sel);
@@ -249,11 +249,11 @@
 
         if (calcType === "built-up") {
             if (buFields) buFields.classList.remove("hidden");
-            if (authSel) authSel.classList.add("hidden");
         } else {
             if (buFields) buFields.classList.add("hidden");
-            if (authSel) authSel.classList.remove("hidden");
         }
+        // Authority (CSMC / CSMRDA) applies to both Open Plot and Built Up
+        if (authSel) authSel.classList.remove("hidden");
     }
 
     function renderFsiSlabTable(activeId) {
@@ -367,6 +367,7 @@
 
     let hpUnit = "sqft";
     let hpQuality = "medium";
+    let lastHpResult = null;
 
     function updateHomePlanning() {
         if (typeof calculateHomePlanning !== "function") return;
@@ -374,11 +375,14 @@
         if (!areaEl) return;
         const area = parseNum(areaEl.value) || 0;
         const result = calculateHomePlanning(area, hpUnit, hpQuality);
+        lastHpResult = result;
 
         const costSqftEl = $("#hp-cost-sqft");
         const totalEl = $("#hp-total-cost");
+        const pdfBtn = $("#hp-pdf-btn");
         if (costSqftEl) costSqftEl.textContent = formatHomePlanningInr(result.costPerSqFt);
         if (totalEl) totalEl.textContent = formatHomePlanningInr(result.totalCost);
+        if (pdfBtn) pdfBtn.disabled = !(result.totalCost > 0);
 
         const phaseBody = $("#hp-phase-tbody");
         if (phaseBody) {
@@ -433,6 +437,19 @@
                 updateHomePlanning();
             });
         });
+
+        const pdfBtn = $("#hp-pdf-btn");
+        if (pdfBtn) {
+            pdfBtn.addEventListener("click", () => {
+                if (!lastHpResult || !(lastHpResult.totalCost > 0)) {
+                    alert(t("hpEstimateFirst", lang));
+                    return;
+                }
+                if (typeof printHomePlanningEstimate === "function") {
+                    printHomePlanningEstimate(lastHpResult, lang, hpUnit);
+                }
+            });
+        }
 
         updateHomePlanning();
     }
@@ -516,7 +533,8 @@
                 plotSqM, asrRate,
                 parseNum($("#bu-res").value) || 0,
                 parseNum($("#bu-comm").value) || 0,
-                parseNum($("#bu-margins").value) || 0
+                parseNum($("#bu-margins").value) || 0,
+                calcAuthority
             );
         } else {
             return;

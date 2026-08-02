@@ -103,7 +103,7 @@
                 <td>
                     <select id="pct2" onchange="calculate()">
                         <option value="0.20">20%</option>
-                        <option value="0.35">35%</option>
+                        <option value="0.30">30%</option>
                     </select>
                 </td>
                 <td><input type="number" id="factor2" value="1" oninput="calculate()"></td>
@@ -207,7 +207,7 @@
             setVal('total1', bdc); 
             grandTotal += bdc;
 
-            // 2. PREMIUM FSI: Area * ASR * (20% or 35%) * Factor
+            // 2. PREMIUM FSI: Area * ASR * (20% or 30%) * Factor
             let premPct = parseFloat(document.getElementById('pct2').value);
             let prem = getVal('area2') * getVal('asr2') * premPct * getVal('factor2');
             setVal('total2', prem); 
