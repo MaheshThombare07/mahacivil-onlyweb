@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="images/favicon.png">
-    <link rel="stylesheet" href="css/style.css?v=43">
+    <link rel="stylesheet" href="css/style.css?v=45">
     <script>
         /* Dismiss educational disclaimer early so it never blocks the menu */
         (function () {
@@ -285,22 +285,38 @@
                             </div>
 
                             <div id="built-up-fields" class="built-up-fields hidden">
+                                <div id="bu-mode-selector" class="bu-mode-selector hidden">
+                                    <span class="bu-mode-label" data-i18n="buModeLabel">Built-up type:</span>
+                                    <div class="calc-tabs bu-mode-tabs" role="group" aria-label="Built-up type">
+                                        <button type="button" class="calc-tab bu-mode-btn active" data-bu-mode="residential" data-i18n="buModeResidential">Residential</button>
+                                        <button type="button" class="calc-tab bu-mode-btn" data-bu-mode="mix" data-i18n="buModeMix">Mix (Res + Comm)</button>
+                                    </div>
+                                </div>
                                 <div class="form-grid">
-                                    <div class="form-group">
+                                    <div class="form-group" id="bu-res-group">
                                         <label for="bu-res" data-i18n="builtUpRes">Built-up Area Residential</label>
                                         <input type="text" class="form-input" id="bu-res" inputmode="decimal" placeholder="0" autocomplete="off">
                                         <p class="field-error hidden" id="err-bu-res"></p>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group" id="bu-comm-group">
                                         <label for="bu-comm" data-i18n="builtUpComm">Built-up Area Commercial</label>
                                         <input type="text" class="form-input" id="bu-comm" inputmode="decimal" placeholder="0" autocomplete="off">
                                         <p class="field-error hidden" id="err-bu-comm"></p>
                                     </div>
                                     <div class="form-group full-width">
-                                        <label for="bu-margins" data-i18n="builtUpMargins">Built-up in Margins</label>
+                                        <label for="bu-margins" id="bu-margins-label" data-i18n="builtUpMargins">Built-up in Margins</label>
                                         <input type="text" class="form-input" id="bu-margins" inputmode="decimal" placeholder="0" autocomplete="off">
                                         <p class="field-error hidden" id="err-bu-margins"></p>
                                     </div>
+                                </div>
+                                <div id="bu-mix-preview" class="bu-mix-preview hidden" aria-live="polite">
+                                    <p><span data-i18n="buBasicFsi">Basic FSI (1.1x)</span>: <strong id="bu-mix-basic">0</strong> <span data-i18n="sqM">Sq.m</span></p>
+                                    <p><span data-i18n="buMaxRes">Max Residential Limit (1.6x)</span>: <strong id="bu-mix-max-res">0</strong> <span data-i18n="sqM">Sq.m</span></p>
+                                    <p><span data-i18n="buMaxComm">Max Commercial Limit (1.8x)</span>: <strong id="bu-mix-max-comm">0</strong> <span data-i18n="sqM">Sq.m</span></p>
+                                    <p><span data-i18n="ancillaryConsumed">Total Ancillary consumed</span>: <strong id="bu-mix-anc">0</strong> <span data-i18n="sqM">Sq.m</span></p>
+                                    <p><span data-i18n="regRes">To be regularised Res.</span>: <strong id="bu-mix-reg-res">0</strong> <span data-i18n="sqM">Sq.m</span></p>
+                                    <p><span data-i18n="regComm">To be regularised Comm.</span>: <strong id="bu-mix-reg-comm">0</strong> <span data-i18n="sqM">Sq.m</span></p>
+                                    <p class="bu-mix-not-reg"><span data-i18n="notReg">Not regularised Area</span>: <strong id="bu-mix-not-reg">0</strong> <span data-i18n="sqM">Sq.m</span></p>
                                 </div>
                             </div>
 
@@ -873,9 +889,18 @@
                     <p data-i18n="bpPageDesc">Enter area, ASR, and factors to estimate building permission charges.</p>
                 </div>
                 <div id="building-permission-view" class="perm-calc-view">
-                    <div class="calc-panel card perm-calc-card">
+                    <div class="calc-top-controls bp-authority-bar">
+                        <div class="authority-selector" id="bp-authority-selector">
+                            <span class="authority-label" data-i18n="authorityLabel">Authority:</span>
+                            <button type="button" class="authority-btn active" data-bp-authority="csmrda" data-i18n="authorityCmrda">CSMRDA</button>
+                            <button type="button" class="authority-btn" data-bp-authority="csmc" data-i18n="authorityCsmc">CSMC</button>
+                        </div>
+                    </div>
+
+                    <!-- CSMRDA (existing) -->
+                    <div id="bp-panel-csmrda" class="calc-panel card perm-calc-card">
                         <div class="perm-table-wrap">
-                            <table class="perm-table" aria-label="Building permission charges">
+                            <table class="perm-table" aria-label="Building permission charges CSMRDA">
                                 <thead>
                                     <tr>
                                         <th data-i18n="bpColSr">Sr.</th>
@@ -988,6 +1013,131 @@
                         </div>
                         <button type="button" id="bp-recalculate" class="btn btn-primary perm-recalc-btn" data-i18n="bpRecalculate">Recalculate All</button>
                         <p class="perm-note muted" data-i18n="bpFormulaNote">Formula: Area × ASR × Percentage × Factor</p>
+                    </div>
+
+                    <!-- CSMC (AMC) -->
+                    <div id="bp-panel-csmc" class="calc-panel card perm-calc-card hidden">
+                        <div class="bp-csmc-top">
+                            <div class="bp-csmc-field">
+                                <label for="bp-csmc-master-asr" data-i18n="bpCsmcMasterAsr">Master ASR Value (Auto-fill)</label>
+                                <input type="number" class="form-input perm-input" id="bp-csmc-master-asr" inputmode="decimal" min="0" step="any" value="0" placeholder="0">
+                            </div>
+                            <div class="bp-csmc-field">
+                                <label for="bp-csmc-plot" data-i18n="bpCsmcPlotArea">Plot Area (Sq. Mt.)</label>
+                                <input type="number" class="form-input perm-input" id="bp-csmc-plot" inputmode="decimal" min="0" step="any" value="0">
+                            </div>
+                            <div class="bp-csmc-field">
+                                <label for="bp-csmc-builtup" data-i18n="bpCsmcBuiltup">Total Built-up Area (Sq. Mt.)</label>
+                                <input type="number" class="form-input perm-input" id="bp-csmc-builtup" inputmode="decimal" min="0" step="any" value="0">
+                            </div>
+                            <div class="bp-csmc-field">
+                                <label for="bp-csmc-comm" data-i18n="bpCsmcCommArea">Commercial Area (Sq. Mt.)</label>
+                                <input type="number" class="form-input perm-input" id="bp-csmc-comm" inputmode="decimal" min="0" step="any" value="0">
+                            </div>
+                            <div class="bp-csmc-field">
+                                <label for="bp-csmc-sanctioned" data-i18n="bpCsmcSanctioned">Sanctioned Layout?</label>
+                                <select id="bp-csmc-sanctioned" class="form-select perm-select">
+                                    <option value="Yes" data-i18n="bpCsmcYes">Yes</option>
+                                    <option value="No" data-i18n="bpCsmcNo">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="bp-csmc-actions">
+                            <button type="button" id="bp-csmc-clear" class="btn btn-secondary" data-i18n="bpCsmcClear">Clear All</button>
+                        </div>
+                        <div class="perm-table-wrap">
+                            <table class="perm-table bp-csmc-table" aria-label="Building permission charges CSMC">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="bpColSr">Sr.</th>
+                                        <th data-i18n="bpCsmcColDesc">Charge Description</th>
+                                        <th data-i18n="bpCsmcColRate">Percentage / Rate</th>
+                                        <th data-i18n="bpCsmcColAsr">ASR / Rate</th>
+                                        <th data-i18n="bpCsmcColArea">Area in Sq. Mt.</th>
+                                        <th data-i18n="bpColTotal">Total (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td class="bp-charge-name">SECURITY DEPOSIT</td>
+                                        <td data-i18n="bpCsmcSlabBased">Slab Based</td>
+                                        <td data-i18n="bpCsmcAuto">Auto</td>
+                                        <td data-i18n="bpCsmcUsesBuiltup">Uses Total B/up</td>
+                                        <td class="perm-total" id="bp-csmc-total1">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td class="bp-charge-name">CITY DEVELOPMENT CHARGES</td>
+                                        <td>2%</td>
+                                        <td><input type="number" class="form-input perm-input bp-csmc-asr" id="bp-csmc-asr2" inputmode="decimal" min="0" step="any" value="0"></td>
+                                        <td data-i18n="bpCsmcUsesBuiltup">Uses Total B/up</td>
+                                        <td class="perm-total" id="bp-csmc-total2">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td class="bp-charge-name">CITY DEV CHARGES (COMMERCIAL ONLY)</td>
+                                        <td>4%</td>
+                                        <td><input type="number" class="form-input perm-input bp-csmc-asr" id="bp-csmc-asr3" inputmode="decimal" min="0" step="any" value="0"></td>
+                                        <td data-i18n="bpCsmcUsesComm">Uses Comm Area</td>
+                                        <td class="perm-total" id="bp-csmc-total3">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td class="bp-charge-name">ANCILLARY AREA PREMIUM</td>
+                                        <td>10%</td>
+                                        <td><input type="number" class="form-input perm-input bp-csmc-asr" id="bp-csmc-asr4" inputmode="decimal" min="0" step="any" value="0"></td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-csmc-area4" inputmode="decimal" min="0" step="any" value="0"></td>
+                                        <td class="perm-total" id="bp-csmc-total4">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td class="bp-charge-name">Premium Charge For Corporation</td>
+                                        <td>35%</td>
+                                        <td><input type="number" class="form-input perm-input bp-csmc-asr" id="bp-csmc-asr5" inputmode="decimal" min="0" step="any" value="0"></td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-csmc-area5" inputmode="decimal" min="0" step="any" value="0"></td>
+                                        <td class="perm-total" id="bp-csmc-total5">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>6</td>
+                                        <td class="bp-charge-name">Labour Cess (Residential)</td>
+                                        <td>₹254 / Sq.Mt.</td>
+                                        <td data-i18n="bpCsmcNil">NIL</td>
+                                        <td data-i18n="bpCsmcUsesBuiltup">Uses Total B/up</td>
+                                        <td class="perm-total" id="bp-csmc-total6">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>7</td>
+                                        <td class="bp-charge-name">ONE TIME PREMIUM CONVERSION (Residential)</td>
+                                        <td data-i18n="bpCsmcFixedRate11">Fixed Rate (× 11)</td>
+                                        <td data-i18n="bpCsmcNil">NIL</td>
+                                        <td data-i18n="bpCsmcUsesPlot">Uses Plot Area</td>
+                                        <td class="perm-total" id="bp-csmc-total7">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>8</td>
+                                        <td class="bp-charge-name">Fire Cess</td>
+                                        <td>Res (₹64) / Comm (₹191)</td>
+                                        <td data-i18n="bpCsmcNil">NIL</td>
+                                        <td data-i18n="bpCsmcUsesResComm">Uses Res &amp; Comm B/up</td>
+                                        <td class="perm-total" id="bp-csmc-total8">0.00</td>
+                                    </tr>
+                                    <tr id="bp-csmc-row-open" class="hidden">
+                                        <td>9</td>
+                                        <td class="bp-charge-name">Open Space (Non-Sanctioned Only)</td>
+                                        <td>10%</td>
+                                        <td><input type="number" class="form-input perm-input bp-csmc-asr" id="bp-csmc-asr9" inputmode="decimal" min="0" step="any" value="0"></td>
+                                        <td><input type="number" class="form-input perm-input" id="bp-csmc-area9" inputmode="decimal" min="0" step="any" value="0"></td>
+                                        <td class="perm-total" id="bp-csmc-total9">0.00</td>
+                                    </tr>
+                                    <tr class="perm-grand-row">
+                                        <td colspan="5" class="perm-grand-label" data-i18n="bpGrandTotal">Grand Total</td>
+                                        <td class="perm-grand-value" id="bp-csmc-grandTotal">0.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="perm-note muted" data-i18n="bpCsmcNote">CSMC (Municipal) building permission charges based on plot, built-up and commercial areas.</p>
                     </div>
                 </div>
             </div>
@@ -1312,14 +1462,14 @@
 
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
-    <script src="js/i18n.js?v=34"></script>
-    <script src="js/calculator.js?v=18"></script>
+    <script src="js/i18n.js?v=36"></script>
+    <script src="js/calculator.js?v=19"></script>
     <script src="js/home-planning.js?v=1"></script>
-    <script src="js/building-permission.js?v=1"></script>
+    <script src="js/building-permission.js?v=2"></script>
     <script src="js/layout-permission.js?v=1"></script>
-    <script src="js/pdf.js?v=15"></script>
+    <script src="js/pdf.js?v=16"></script>
     <script src="js/asr.js?v=17"></script>
     <script src="js/auth.js?v=6"></script>
-    <script src="js/app.js?v=28"></script>
+    <script src="js/app.js?v=29"></script>
 </body>
 </html>

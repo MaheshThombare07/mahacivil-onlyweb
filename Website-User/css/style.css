@@ -1445,6 +1445,52 @@ img, svg {
     border-top: 1px solid var(--border-light);
 }
 
+.bu-mode-selector {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    margin-bottom: 16px;
+}
+
+.bu-mode-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--maha-blue);
+}
+
+.bu-mode-tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bu-mode-tabs .calc-tab {
+    min-width: 0;
+    padding: 8px 14px;
+    font-size: 0.88rem;
+}
+
+.bu-mix-preview {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--maha-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+.bu-mix-preview p {
+    margin: 4px 0;
+    color: var(--text);
+}
+
+.bu-mix-preview .bu-mix-not-reg {
+    color: #b42318;
+    font-weight: 600;
+}
+
 /* ── FSI Calculator ── */
 .fsi-calculator-view {
     margin-top: 8px;
@@ -4294,6 +4340,56 @@ img, svg {
     margin-top: 8px;
 }
 
+.bp-authority-bar {
+    margin-bottom: 16px;
+}
+
+.bp-csmc-top {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+    padding: 16px;
+    background: var(--maha-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+}
+
+.bp-csmc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.bp-csmc-field label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--maha-blue);
+    line-height: 1.3;
+}
+
+.bp-csmc-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 14px;
+}
+
+.bp-charge-name {
+    font-weight: 600;
+    text-align: left !important;
+    min-width: 160px;
+}
+
+.bp-csmc-table th,
+.bp-csmc-table td {
+    text-align: center;
+}
+
+.bp-csmc-table .bp-charge-name {
+    text-align: left !important;
+}
+
 .perm-calc-card {
     padding: 20px 22px 24px;
 }
@@ -4442,6 +4538,12 @@ img, svg {
         padding: 14px;
     }
 
+    .bp-csmc-top {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 12px;
+    }
+
     .perm-table {
         min-width: 640px;
         font-size: 0.82rem;
@@ -4450,6 +4552,12 @@ img, svg {
     .perm-table th,
     .perm-table td {
         padding: 8px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bp-csmc-top {
+        grid-template-columns: 1fr;
     }
 }
 

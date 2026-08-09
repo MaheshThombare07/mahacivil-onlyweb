@@ -5,6 +5,7 @@
     let lang = "en";
     let calcType = "open-plot";
     let calcAuthority = "csmc"; // "cmrda" (CSMRDA) | "csmc" — Open Plot & Built Up
+    let calcBuiltUpMode = "residential"; // CSMC Built Up: "residential" | "mix"
     let lastResult = null;
 
     const $ = (sel) => document.querySelector(sel);
@@ -221,39 +222,100 @@
     }
 
     function initCalcType() {
-        $$(".calc-tab").forEach((btn) => {
+        $$(".calc-tab[data-calc]").forEach((btn) => {
             btn.addEventListener("click", () => {
                 calcType = btn.dataset.calc;
-                $$(".calc-tab").forEach((b) => b.classList.remove("active"));
+                $$(".calc-tab[data-calc]").forEach((b) => b.classList.remove("active"));
                 btn.classList.add("active");
                 updateCalcView();
                 resetReceipt();
             });
         });
 
-        $$(".authority-btn").forEach((btn) => {
+        $$("#authority-selector .authority-btn").forEach((btn) => {
             btn.addEventListener("click", () => {
                 calcAuthority = btn.dataset.authority;
-                $$(".authority-btn").forEach((b) => b.classList.remove("active"));
+                $$("#authority-selector .authority-btn").forEach((b) => b.classList.remove("active"));
                 btn.classList.add("active");
+                updateCalcView();
                 resetReceipt();
             });
+        });
+
+        $$(".bu-mode-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                calcBuiltUpMode = btn.dataset.buMode === "mix" ? "mix" : "residential";
+                $$(".bu-mode-btn").forEach((b) => b.classList.toggle("active", b === btn));
+                updateCalcView();
+                updateMixPreview();
+                resetReceipt();
+            });
+        });
+
+        ["bu-res", "bu-comm", "bu-margins", "plot-sqm", "asr-rate"].forEach((id) => {
+            const el = $("#" + id);
+            if (el) {
+                el.addEventListener("input", updateMixPreview);
+            }
         });
 
         updateCalcView();
     }
 
+    function updateMixPreview() {
+        const preview = $("#bu-mix-preview");
+        if (!preview || preview.classList.contains("hidden")) return;
+        if (typeof calculateBuiltUp !== "function") return;
+
+        const plotSqM = parseNum($("#plot-sqm") && $("#plot-sqm").value) || 0;
+        const asrRate = parseNum($("#asr-rate") && $("#asr-rate").value) || 0;
+        const res = parseNum($("#bu-res") && $("#bu-res").value) || 0;
+        const comm = parseNum($("#bu-comm") && $("#bu-comm").value) || 0;
+        const margins = parseNum($("#bu-margins") && $("#bu-margins").value) || 0;
+        const result = calculateBuiltUp(plotSqM, asrRate, res, comm, margins, "csmc", "mix");
+        const s = result.summary;
+
+        const setText = (id, v) => {
+            const el = $(id);
+            if (el) el.textContent = formatArea(v);
+        };
+        setText("#bu-mix-basic", s.basicAllowed || 0);
+        setText("#bu-mix-max-res", s.maxResLimit || 0);
+        setText("#bu-mix-max-comm", s.maxCommLimit || 0);
+        setText("#bu-mix-anc", s.ancillaryAreaConsumed || 0);
+        setText("#bu-mix-reg-res", s.toBeRegularizedResidential || 0);
+        setText("#bu-mix-reg-comm", s.toBeRegularizedCommercial || 0);
+        setText("#bu-mix-not-reg", s.notRegularizedArea || 0);
+    }
+
     function updateCalcView() {
         const buFields = $("#built-up-fields");
         const authSel = $("#authority-selector");
+        const modeSel = $("#bu-mode-selector");
+        const commGroup = $("#bu-comm-group");
+        const mixPreview = $("#bu-mix-preview");
+        const isBuiltUp = calcType === "built-up";
+        const isCsmc = calcAuthority === "csmc";
+        const isMix = isBuiltUp && isCsmc && calcBuiltUpMode === "mix";
 
-        if (calcType === "built-up") {
-            if (buFields) buFields.classList.remove("hidden");
-        } else {
-            if (buFields) buFields.classList.add("hidden");
-        }
-        // Authority (CSMC / CSMRDA) applies to both Open Plot and Built Up
+        if (buFields) buFields.classList.toggle("hidden", !isBuiltUp);
         if (authSel) authSel.classList.remove("hidden");
+
+        if (modeSel) modeSel.classList.toggle("hidden", !(isBuiltUp && isCsmc));
+
+        // Residential: commercial field optional/hidden (pure residential). Mix: show both.
+        if (commGroup) {
+            commGroup.classList.toggle("hidden", isBuiltUp && isCsmc && !isMix);
+        }
+        if (mixPreview) {
+            mixPreview.classList.toggle("hidden", !isMix);
+            if (isMix) updateMixPreview();
+        }
+
+        // Keep active state on mode buttons
+        $$(".bu-mode-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.buMode === calcBuiltUpMode);
+        });
     }
 
     function renderFsiSlabTable(activeId) {
@@ -529,12 +591,17 @@
         if (calcType === "open-plot") {
             lastResult = calculateOpenPlot(plotSqM, asrRate, calcAuthority);
         } else if (calcType === "built-up") {
+            const isMix = calcAuthority === "csmc" && calcBuiltUpMode === "mix";
+            const resVal = parseNum($("#bu-res").value) || 0;
+            const commVal = isMix ? (parseNum($("#bu-comm").value) || 0) : 0;
+            const margVal = parseNum($("#bu-margins").value) || 0;
             lastResult = calculateBuiltUp(
                 plotSqM, asrRate,
-                parseNum($("#bu-res").value) || 0,
-                parseNum($("#bu-comm").value) || 0,
-                parseNum($("#bu-margins").value) || 0,
-                calcAuthority
+                resVal,
+                commVal,
+                margVal,
+                calcAuthority,
+                isMix ? "mix" : "residential"
             );
         } else {
             return;
@@ -556,13 +623,20 @@
         if (sqmErr || asrErr) return;
 
         if (calcType === "built-up") {
+            const isMix = calcAuthority === "csmc" && calcBuiltUpMode === "mix";
             const resErr = validateField($("#bu-res").value.trim(), t("builtUpRes", lang), true);
-            const commErr = validateField($("#bu-comm").value.trim(), t("builtUpComm", lang), true);
             const margErr = validateField($("#bu-margins").value.trim(), t("builtUpMargins", lang), true);
             showError("#err-bu-res", resErr);
-            showError("#err-bu-comm", commErr);
             showError("#err-bu-margins", margErr);
-            if (resErr || commErr || margErr) return;
+
+            if (isMix) {
+                const commErr = validateField($("#bu-comm").value.trim(), t("builtUpComm", lang), true);
+                showError("#err-bu-comm", commErr);
+                if (resErr || commErr || margErr) return;
+            } else {
+                showError("#err-bu-comm", null);
+                if (resErr || margErr) return;
+            }
         }
 
         // Login temporarily disabled — show results without auth

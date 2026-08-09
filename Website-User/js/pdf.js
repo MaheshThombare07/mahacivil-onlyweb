@@ -221,6 +221,22 @@ function buildReceiptHtml(result, lang) {
         const authLabel = result.authority === "cmrda"
             ? t("authorityCmrda", lang)
             : t("authorityCsmc", lang);
+        const modeLabel = result.builtUpMode === "mix"
+            ? t("buModeMix", lang)
+            : t("buModeResidential", lang);
+        let extraLimits = "";
+        if (result.builtUpMode === "mix") {
+            extraLimits = `
+            <div class="summary-row"><span>${t("buModeLabel", lang)}</span><span><strong>${modeLabel}</strong></span></div>
+            <div class="summary-row"><span>${t("buBasicFsi", lang)}</span><span>${formatArea(s.basicAllowed)} ${t("sqM", lang)}</span></div>
+            <div class="summary-row"><span>${t("buMaxRes", lang)}</span><span>${formatArea(s.maxResLimit)} ${t("sqM", lang)}</span></div>
+            <div class="summary-row"><span>${t("buMaxComm", lang)}</span><span>${formatArea(s.maxCommLimit)} ${t("sqM", lang)}</span></div>
+            `;
+        } else {
+            extraLimits = `
+            <div class="summary-row"><span>${t("maxBuiltUp", lang)}</span><span>${formatArea(s.maximumBuiltUpAllowed)} ${t("sqM", lang)}</span></div>
+            `;
+        }
         summaryHtml = `
             <div class="summary-row"><span>${t("plotArea", lang)}</span><span>${formatArea(s.plotAreaSqM)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("asrRate", lang)}</span><span>${formatRate(s.asrRate)}</span></div>
@@ -228,7 +244,7 @@ function buildReceiptHtml(result, lang) {
             <div class="summary-row"><span>${t("builtUpRes", lang)}</span><span>${formatArea(s.builtUpResidential)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("builtUpComm", lang)}</span><span>${formatArea(s.builtUpCommercial)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("builtUpMargins", lang)}</span><span>${formatArea(s.builtUpInMargins)} ${t("sqM", lang)}</span></div>
-            <div class="summary-row"><span>${t("maxBuiltUp", lang)}</span><span>${formatArea(s.maximumBuiltUpAllowed)} ${t("sqM", lang)}</span></div>
+            ${extraLimits}
             <div class="summary-row"><span>${t("ancillaryConsumed", lang)}</span><span>${formatArea(s.ancillaryAreaConsumed)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("regRes", lang)}</span><span>${formatArea(s.toBeRegularizedResidential)} ${t("sqM", lang)}</span></div>
             <div class="summary-row"><span>${t("regComm", lang)}</span><span>${formatArea(s.toBeRegularizedCommercial)} ${t("sqM", lang)}</span></div>
@@ -315,6 +331,22 @@ function buildPrintReceiptHtml(result, lang) {
         const authLabel = result.authority === "cmrda"
             ? t("authorityCmrda", lang)
             : t("authorityCsmc", lang);
+        const modeLabel = result.builtUpMode === "mix"
+            ? t("buModeMix", lang)
+            : t("buModeResidential", lang);
+        let extraLimits = "";
+        if (result.builtUpMode === "mix") {
+            extraLimits = `
+            <tr><td>${t("buModeLabel", lang)}</td><td>${modeLabel}</td></tr>
+            <tr><td>${t("buBasicFsi", lang)}</td><td>${formatArea(s.basicAllowed)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("buMaxRes", lang)}</td><td>${formatArea(s.maxResLimit)} ${t("sqM", lang)}</td></tr>
+            <tr><td>${t("buMaxComm", lang)}</td><td>${formatArea(s.maxCommLimit)} ${t("sqM", lang)}</td></tr>
+            `;
+        } else {
+            extraLimits = `
+            <tr><td>${t("maxBuiltUp", lang)}</td><td>${formatArea(s.maximumBuiltUpAllowed)} ${t("sqM", lang)}</td></tr>
+            `;
+        }
         summaryRows = `
             <tr><td>${t("plotArea", lang)}</td><td>${formatArea(s.plotAreaSqM)} ${t("sqM", lang)}</td></tr>
             <tr><td>${t("asrRate", lang)}</td><td>${formatRate(s.asrRate)}</td></tr>
@@ -322,7 +354,7 @@ function buildPrintReceiptHtml(result, lang) {
             <tr><td>${t("builtUpRes", lang)}</td><td>${formatArea(s.builtUpResidential)} ${t("sqM", lang)}</td></tr>
             <tr><td>${t("builtUpComm", lang)}</td><td>${formatArea(s.builtUpCommercial)} ${t("sqM", lang)}</td></tr>
             <tr><td>${t("builtUpMargins", lang)}</td><td>${formatArea(s.builtUpInMargins)} ${t("sqM", lang)}</td></tr>
-            <tr><td>${t("maxBuiltUp", lang)}</td><td>${formatArea(s.maximumBuiltUpAllowed)} ${t("sqM", lang)}</td></tr>
+            ${extraLimits}
             <tr><td>${t("ancillaryConsumed", lang)}</td><td>${formatArea(s.ancillaryAreaConsumed)} ${t("sqM", lang)}</td></tr>
             <tr><td>${t("regRes", lang)}</td><td>${formatArea(s.toBeRegularizedResidential)} ${t("sqM", lang)}</td></tr>
             <tr><td>${t("regComm", lang)}</td><td>${formatArea(s.toBeRegularizedCommercial)} ${t("sqM", lang)}</td></tr>

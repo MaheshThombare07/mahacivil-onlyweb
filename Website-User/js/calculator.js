@@ -71,8 +71,64 @@ function calculateOpenPlot(plotAreaSqM, asrRate, authority) {
     return { plotAreaSqM, asrRate, authority: auth, charges, total, type: "open-plot" };
 }
 
-function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins, authority) {
+function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins, authority, builtUpMode) {
     const auth = authority === "cmrda" ? "cmrda" : "csmc";
+    const mode = (auth === "csmc" && builtUpMode === "mix") ? "mix" : "residential";
+    const bettermentRate = CONSTANTS.BETTERMENT_FIXED_RATE;
+
+    if (mode === "mix") {
+        // Res + Comm (mix) — commercial priority FSI logic
+        const basicAllowed = plotAreaSqM * 1.1;
+        const maxResLimit = basicAllowed * 1.6;
+        const maxCommLimit = basicAllowed * 1.8;
+
+        const toRegComm = Math.min(comm, maxCommLimit);
+        const basicUsedByComm = toRegComm / 1.8;
+        const remBasicForRes = Math.max(0, basicAllowed - basicUsedByComm);
+        const dynamicResAllowed = remBasicForRes * 1.6;
+        const toRegRes = Math.min(res, dynamicResAllowed);
+
+        const totalInputArea = res + comm;
+        const totalRegArea = toRegComm + toRegRes;
+        const notRegularizedArea = Math.max(0, totalInputArea - totalRegArea);
+        const ancillaryArea = totalRegArea > basicAllowed ? totalRegArea - basicAllowed : 0;
+
+        const bettermentMultiplier = plotAreaSqM < 200 ? 0 : 1;
+        const bettermentAmount = plotAreaSqM * bettermentRate * bettermentMultiplier;
+        const ancillaryAmount = ancillaryArea * asrRate * 0.1;
+
+        const summary = {
+            plotAreaSqM,
+            asrRate,
+            builtUpResidential: res,
+            builtUpCommercial: comm,
+            builtUpInMargins: margins,
+            basicAllowed,
+            maxResLimit,
+            maxCommLimit,
+            maximumBuiltUpAllowed: maxResLimit, // for generic receipt fallback
+            ancillaryAreaConsumed: ancillaryArea,
+            toBeRegularizedResidential: toRegRes,
+            toBeRegularizedCommercial: toRegComm,
+            notRegularizedArea
+        };
+
+        const charges = [
+            { name: "Scrutiny Fee", rate: "4", pct: "NA", amount: Math.max(plotAreaSqM, totalInputArea) * 4 },
+            { name: "Betterment Charges", rate: formatRate(bettermentRate), pct: "Condition", amount: bettermentAmount },
+            { name: "Land Dev Charges (eASR)", rate: formatRate(asrRate), pct: "1.5%", amount: plotAreaSqM * asrRate * 0.015 },
+            { name: "City Dev Charges - Res", rate: formatRate(asrRate), pct: "2%", amount: toRegRes * asrRate * 0.02 },
+            { name: "City Dev Charges - Comm", rate: formatRate(asrRate), pct: "4%", amount: toRegComm * asrRate * 0.04 },
+            { name: "Ancillary", rate: formatRate(asrRate), pct: "10%", amount: ancillaryAmount },
+            { name: "Area as per Tip", rate: "As per Ancillary", pct: "", amount: ancillaryAmount },
+            { name: "Marginal Distance Penalty", rate: formatRate(asrRate), pct: "10%", amount: margins * asrRate * 0.10 }
+        ];
+
+        const total = charges.reduce((s, c) => s + c.amount, 0);
+        return { summary, charges, total, type: "built-up", authority: auth, builtUpMode: "mix" };
+    }
+
+    // Residential (existing) — also used for CSMRDA Built Up
     const maxBuiltUp = plotAreaSqM * CONSTANTS.MAX_BUILT_UP_FSI;
     const toBeRegularizedResidential = Math.min(res, maxBuiltUp);
     const ancillaryArea = Math.max(0, toBeRegularizedResidential - (plotAreaSqM * 1.1));
@@ -90,8 +146,7 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins, authority) {
         notRegularizedArea
     };
 
-    // CSMC: 0% (amount 0). CSMRDA/CMRDA: 50% of (plot area × ₹1836)
-    const bettermentRate = CONSTANTS.BETTERMENT_FIXED_RATE;
+    // CSMC residential: 0%. CSMRDA: 50% of (plot × ₹1836)
     const bettermentPct = auth === "cmrda" ? 0.50 : 0;
     const bettermentLabel = auth === "cmrda" ? "50%" : "0%";
     const bettermentAmount = plotAreaSqM * bettermentRate * bettermentPct;
@@ -111,7 +166,7 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins, authority) {
     ];
 
     const total = charges.reduce((s, c) => s + c.amount, 0);
-    return { summary, charges, total, type: "built-up", authority: auth };
+    return { summary, charges, total, type: "built-up", authority: auth, builtUpMode: "residential" };
 }
 
 function chargeLabel(name, lang) {
