@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="images/favicon.png">
-    <link rel="stylesheet" href="css/style.css?v=42">
+    <link rel="stylesheet" href="css/style.css?v=43">
     <script>
         /* Dismiss educational disclaimer early so it never blocks the menu */
         (function () {
@@ -138,20 +138,83 @@
                             <span data-i18n="heroTitleLead">Maharashtra's Smart Civil Engineering</span><span class="hero-title-accent" data-i18n="heroTitleAccent"> Platform</span>
                         </h1>
                         <p class="hero-desc" data-i18n="heroDesc">
-                            Maharashtra's trusted platform for civil engineering tools, government resources, technical references, and professional solutions—all in one place.
+                            Calculate Gunthewari Plot and Built-Up charges, browse sanctioned DP sector maps, and download professional PDF receipts — all in one place.
                         </p>
-                        <div class="hero-actions">
-                            <a href="#calculator" class="btn btn-primary" data-page="calculator" data-i18n="heroCtaCalc">Gunthewari Calculator</a>
-                            <a href="#asr-rates" class="btn btn-ghost" data-page="asr-rates" data-i18n="navAsr">eASR Rates</a>
-                            <a href="#dp-maps" class="btn btn-outline" data-page="dp-maps" data-i18n="heroCtaDp">View DP Maps</a>
-                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Calculator (on Home) -->
-        <section id="calculator" class="section section-alt">
+        <!-- Tools grid -->
+        <section id="tools" class="section tools-section">
+            <div class="container">
+                <div class="section-head section-head-center tools-section-head">
+                    <h2 data-i18n="toolsTitle">MahaCivil Tools</h2>
+                    <p data-i18n="toolsSubtitle">Choose a tool below to get started.</p>
+                </div>
+                <div class="tools-grid" role="list">
+                    <a href="#asr-rates" class="tool-card" data-page="asr-rates" role="listitem">
+                        <span class="tool-card-icon"><img src="images/icon-easr.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>
+                        <h3 data-i18n="toolEasrTitle">eASR</h3>
+                        <p data-i18n="toolEasrDesc">View latest eASR rates and details.</p>
+                        <span class="tool-card-cta" data-i18n="toolCtaViewEasr">View eASR</span>
+                    </a>
+                    <a href="#calculator" class="tool-card" data-page="calculator" role="listitem">
+                        <span class="tool-card-icon"><img src="images/icon-gunthewari.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>
+                        <h3 data-i18n="toolGunthewariTitle">Gunthewari</h3>
+                        <p data-i18n="toolGunthewariDesc">Calculate Gunthewari charges for your property instantly.</p>
+                        <span class="tool-card-cta" data-i18n="toolCtaCalculate">Calculate Now</span>
+                    </a>
+                    <a href="#fsi-calculator" class="tool-card" data-page="fsi-calculator" role="listitem">
+                        <span class="tool-card-icon"><img src="images/icon-fsi.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>
+                        <h3 data-i18n="toolFsiTitle">FSI Calculator</h3>
+                        <p data-i18n="toolFsiDesc">Calculate FSI, permissible area and utilization details.</p>
+                        <span class="tool-card-cta" data-i18n="toolCtaCalculate">Calculate Now</span>
+                    </a>
+                    <a href="#construction-estimate" class="tool-card" data-page="construction-estimate" role="listitem">
+                        <span class="tool-card-icon"><img src="images/icon-estimate.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>
+                        <h3 data-i18n="toolEstimateTitle">Construction Estimate Calculator</h3>
+                        <p data-i18n="toolEstimateDesc">Generate detailed construction estimates with ease.</p>
+                        <span class="tool-card-cta" data-i18n="toolCtaCalculate">Calculate Now</span>
+                    </a>
+                    <a href="#building-permission" class="tool-card" data-page="building-permission" role="listitem">
+                        <span class="tool-card-icon"><img src="images/icon-bpms.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>
+                        <h3 data-i18n="toolBpmsTitle">BPMS Challan Calculator</h3>
+                        <p data-i18n="toolBpmsDesc">Calculate building proposal challan amount.</p>
+                        <span class="tool-card-cta" data-i18n="toolCtaCalculate">Calculate Now</span>
+                    </a>
+                    <a href="#layout-permission" class="tool-card" data-page="layout-permission" role="listitem">
+                        <span class="tool-card-icon"><img src="images/icon-layout.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>
+                        <h3 data-i18n="toolLayoutTitle">Layout Challan Calculator</h3>
+                        <p data-i18n="toolLayoutDesc">Calculate layout approval challan amount.</p>
+                        <span class="tool-card-cta" data-i18n="toolCtaCalculate">Calculate Now</span>
+                    </a>
+                    <a href="#dp-maps" class="tool-card" data-page="dp-maps" role="listitem">
+                        <span class="tool-card-icon"><img src="images/icon-dp-maps.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>
+                        <h3 data-i18n="toolDpTitle">DP Maps</h3>
+                        <p data-i18n="toolDpDesc">Browse and view sanctioned DP sector maps.</p>
+                        <span class="tool-card-cta" data-i18n="toolCtaViewMaps">View Maps</span>
+                    </a>
+                    <a href="#services" class="tool-card" data-page="services" role="listitem">
+                        <span class="tool-card-icon"><img src="images/icon-services.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>
+                        <h3 data-i18n="toolServicesTitle">Services</h3>
+                        <p data-i18n="toolServicesDesc">Explore all our services and offerings.</p>
+                        <span class="tool-card-cta" data-i18n="toolCtaViewServices">View Services</span>
+                    </a>
+                    <a href="#contact" class="tool-card" data-page="contact" role="listitem">
+                        <span class="tool-card-icon"><img src="images/icon-contact.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>
+                        <h3 data-i18n="toolContactTitle">Contact</h3>
+                        <p data-i18n="toolContactDesc">Get in touch with our team for support and queries.</p>
+                        <span class="tool-card-cta" data-i18n="toolCtaContact">Contact Us</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+        </div>
+
+        <div id="view-calculator" class="site-view" data-page="calculator">
+        <!-- Calculator -->
+        <section id="calculator" class="section section-alt page-section">
             <div class="container">
                 <div class="section-head section-head-center">
                     <p class="section-tag" data-i18n="heroTag">Chhatrapati Sambhajinagar</p>
@@ -311,9 +374,11 @@
                 </div>
             </div>
         </section>
+        </div>
 
+        <div id="view-services" class="site-view" data-page="services">
         <!-- Our Services -->
-        <section id="services" class="section">
+        <section id="services" class="section page-section">
             <div class="container">
                 <div class="section-head section-head-center">
                     <p class="section-tag" data-i18n="servicesSectionTag">Consultancy</p>
@@ -381,8 +446,11 @@
             </div>
         </section>
 
+        </div>
+
+        <div id="view-downloads" class="site-view" data-page="downloads">
         <!-- Reference PDF Downloads -->
-        <section id="downloads" class="section section-alt">
+        <section id="downloads" class="section section-alt page-section">
             <div class="container">
                 <div class="section-head section-head-center">
                     <p class="section-tag" data-i18n="downloadsSectionTag">Reference Documents</p>
@@ -417,8 +485,11 @@
             </div>
         </section>
 
+        </div>
+
+        <div id="view-about" class="site-view" data-page="about">
         <!-- About -->
-        <section id="about" class="section section-alt">
+        <section id="about" class="section section-alt page-section">
             <div class="container">
                 <div class="section-head section-head-center">
                     <p class="section-tag" data-i18n="aboutSectionTag">About Us</p>
@@ -457,8 +528,11 @@
                 </div>
             </div>
         </section>
+        </div>
+
+        <div id="view-contact" class="site-view" data-page="contact">
         <!-- Contact -->
-        <section id="contact" class="section">
+        <section id="contact" class="section page-section">
             <div class="container">
                 <div class="section-head section-head-center">
                     <p class="section-tag" data-i18n="navContact">Contact</p>
@@ -1238,7 +1312,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
-    <script src="js/i18n.js?v=33"></script>
+    <script src="js/i18n.js?v=34"></script>
     <script src="js/calculator.js?v=18"></script>
     <script src="js/home-planning.js?v=1"></script>
     <script src="js/building-permission.js?v=1"></script>
@@ -1246,6 +1320,6 @@
     <script src="js/pdf.js?v=15"></script>
     <script src="js/asr.js?v=17"></script>
     <script src="js/auth.js?v=6"></script>
-    <script src="js/app.js?v=27"></script>
+    <script src="js/app.js?v=28"></script>
 </body>
 </html>

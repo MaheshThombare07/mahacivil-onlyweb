@@ -81,11 +81,11 @@
 
     const PAGE_TO_VIEW = {
         home: "view-home",
-        calculator: "view-home",
-        services: "view-home",
-        downloads: "view-home",
-        about: "view-home",
-        contact: "view-home",
+        calculator: "view-calculator",
+        services: "view-services",
+        downloads: "view-downloads",
+        about: "view-about",
+        contact: "view-contact",
         "asr-rates": "view-easr",
         "fsi-calculator": "view-fsi",
         "construction-estimate": "view-construction",
@@ -95,7 +95,7 @@
         "csmrda-maps": "view-csmrda",
     };
 
-    const HOME_SCROLL_SECTIONS = new Set(["calculator", "services", "downloads", "about", "contact"]);
+    const HOME_SCROLL_SECTIONS = new Set();
 
     function resolvePageKey(pageOrHash) {
         const key = String(pageOrHash || "home").replace(/^#/, "").trim();
