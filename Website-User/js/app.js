@@ -123,22 +123,16 @@
         return titles[pageKey] || titles.home;
     }
 
-    function showPage(pageKey) {
-        const key = resolvePageKey(pageKey);
+    function applyPageView(key) {
         const viewId = PAGE_TO_VIEW[key];
         $$(".site-view").forEach((view) => {
             view.classList.toggle("active", view.id === viewId);
         });
         $$(".nav-link").forEach((link) => {
+            // Home logo / home link active only on home; feature nav active on that feature
             link.classList.toggle("active", link.dataset.page === key);
         });
         document.body.dataset.page = key;
-        const hash = key === "home" ? "#home" : "#" + key;
-        if (history.replaceState) {
-            history.replaceState(null, "", hash);
-        } else {
-            location.hash = hash;
-        }
         document.title = getPageTitle(key);
 
         if (HOME_SCROLL_SECTIONS.has(key)) {
@@ -148,6 +142,44 @@
             });
         } else {
             window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+        }
+    }
+
+    function pageHash(key) {
+        return key === "home" ? "#home" : "#" + key;
+    }
+
+    /**
+     * historyMode:
+     *  - "push"    — user navigated (nav/tool/link); adds history so Back works
+     *  - "replace" — first load or silently sync URL
+     *  - "none"    — already at this history entry (Back/Forward / popstate)
+     */
+    function showPage(pageKey, historyMode = "push") {
+        const key = resolvePageKey(pageKey);
+        const hash = pageHash(key);
+        const currentKey = document.body.dataset.page || "";
+        const samePage = currentKey === key
+            && (location.hash === hash || (key === "home" && (!location.hash || location.hash === "#" || location.hash === "#home")));
+
+        applyPageView(key);
+
+        if (historyMode === "none") return;
+
+        if (historyMode === "replace" || samePage) {
+            if (history.replaceState) {
+                history.replaceState({ page: key }, "", hash);
+            } else if (location.hash !== hash) {
+                location.hash = hash;
+            }
+            return;
+        }
+
+        // push new entry (user opened a feature from home/tools)
+        if (history.pushState) {
+            history.pushState({ page: key }, "", hash);
+        } else if (location.hash !== hash) {
+            location.hash = hash;
         }
     }
 
@@ -169,7 +201,7 @@
 
         function navigateTo(pageKey) {
             setMobileNavOpen(false);
-            showPage(pageKey);
+            showPage(pageKey, "push");
         }
 
         if (menuBtn) {
@@ -202,11 +234,32 @@
             }
         });
 
-        window.addEventListener("hashchange", () => {
-            showPage(location.hash);
+        // Browser Back / Forward
+        window.addEventListener("popstate", (e) => {
+            const key = (e.state && e.state.page) || resolvePageKey(location.hash);
+            showPage(key, "none");
         });
 
-        showPage(location.hash || "home");
+        // Hash typed manually or old links without history state
+        window.addEventListener("hashchange", () => {
+            const key = resolvePageKey(location.hash);
+            if (document.body.dataset.page === key) return;
+            showPage(key, "none");
+        });
+
+        // Initial load: seed home under deep links so first Back returns to home
+        const initialKey = resolvePageKey(location.hash || "home");
+        if (history.replaceState && history.pushState) {
+            if (initialKey !== "home") {
+                history.replaceState({ page: "home" }, "", "#home");
+                history.pushState({ page: initialKey }, "", pageHash(initialKey));
+                showPage(initialKey, "none");
+            } else {
+                showPage("home", "replace");
+            }
+        } else {
+            showPage(initialKey, "replace");
+        }
     }
 
     function initLanguage() {
