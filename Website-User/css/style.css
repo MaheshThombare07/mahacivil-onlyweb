@@ -2734,6 +2734,28 @@ img, svg {
 }
 
 /* ── PDF downloads ── */
+.pdf-download-section {
+    max-width: 1100px;
+    margin: 0 auto 36px;
+}
+
+.pdf-download-section-sectors {
+    margin-bottom: 0;
+}
+
+.pdf-download-section-title {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--maha-blue);
+}
+
+.pdf-download-section-desc {
+    margin: 0 0 18px;
+    font-size: 0.92rem;
+}
+
 .pdf-download-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2820,8 +2842,43 @@ img, svg {
     color: var(--maha-blue);
 }
 
+.pdf-sector-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: none;
+}
+
+.pdf-sector-card {
+    padding: 18px;
+    gap: 14px;
+}
+
+.pdf-sector-card .pdf-download-body h3 {
+    font-size: 1rem;
+}
+
+.pdf-sector-card .pdf-download-body p {
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.pdf-download-icon-sector {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #1a5276 0%, #2980b9 100%);
+}
+
+@media (max-width: 900px) {
+    .pdf-sector-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
     .pdf-download-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pdf-sector-grid {
         grid-template-columns: 1fr;
     }
 }
