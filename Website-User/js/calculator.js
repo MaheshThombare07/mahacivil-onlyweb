@@ -121,7 +121,7 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins, authority, b
             { name: "City Dev Charges - Comm", rate: formatRate(asrRate), pct: "4%", amount: toRegComm * asrRate * 0.04 },
             { name: "Ancillary", rate: formatRate(asrRate), pct: "10%", amount: ancillaryAmount },
             { name: "Area as per Tip", rate: "0", pct: "", amount: 0 },
-            { name: "Marginal Distance Penalty", rate: formatRate(asrRate), pct: "5%", amount: margins * asrRate * 0.05 }
+            { name: "Marginal Distance Penalty", rate: "0", pct: "0%", amount: 0 }
         ];
 
         const total = charges.reduce((s, c) => s + c.amount, 0);
@@ -154,11 +154,12 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins, authority, b
     const scrutinyArea = Math.max(plotAreaSqM, res + comm);
     const ancillaryAmount = ancillaryArea * asrRate * 0.10;
 
-    // CSMC: Tip = 0, Marginal penalty = 5%. CSMRDA: Tip = ancillary, Marginal = 10%.
+    // CSMC: Tip = 0, Marginal penalty = 0. CSMRDA: Tip = ancillary, Marginal = 10%.
     const tipAmount = auth === "csmc" ? 0 : ancillaryAmount;
     const tipRate = auth === "csmc" ? "0" : "As per Ancillary";
-    const marginPct = auth === "csmc" ? 0.05 : 0.10;
-    const marginLabel = auth === "csmc" ? "5%" : "10%";
+    const marginPct = auth === "csmc" ? 0 : 0.10;
+    const marginLabel = auth === "csmc" ? "0%" : "10%";
+    const marginRate = auth === "csmc" ? "0" : formatRate(asrRate);
 
     const charges = [
         { name: "Scrutiny Fee", rate: "4", pct: "NA", amount: scrutinyArea * 4 },
@@ -168,7 +169,7 @@ function calculateBuiltUp(plotAreaSqM, asrRate, res, comm, margins, authority, b
         { name: "City Dev Charges - Comm", rate: formatRate(asrRate), pct: "4%", amount: toBeRegularizedCommercial * asrRate * 0.04 },
         { name: "Ancillary", rate: formatRate(asrRate), pct: "10%", amount: ancillaryAmount },
         { name: "Area as per Tip", rate: tipRate, pct: "", amount: tipAmount },
-        { name: "Marginal Distance Penalty", rate: formatRate(asrRate), pct: marginLabel, amount: margins * asrRate * marginPct }
+        { name: "Marginal Distance Penalty", rate: marginRate, pct: marginLabel, amount: margins * asrRate * marginPct }
     ];
 
     const total = charges.reduce((s, c) => s + c.amount, 0);
